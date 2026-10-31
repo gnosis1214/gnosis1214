@@ -1,6 +1,6 @@
 ### Hi, I'm Zeno 🏄
 
-Full-stack web + AI developer working from Siargao, Philippines (GMT+8). I build fast, conversion-focused websites, Shopify stores, web apps and AI automations for agencies, startups and small businesses in the US, UK, AU, SG and DE.
+Full-stack web + AI developer working from Philippines (GMT+8). I build fast, conversion-focused websites, Shopify stores, web apps and AI automations for agencies, startups and small businesses in the US, UK, AU, SG and DE.
 
 🌐 [zana-g.com](https://zana-g.com) · 📂 [Case studies](https://zana-g.com/#zeno-cases) · 💬 [Work with me](https://zana-g.com/#zeno-contact)
 
