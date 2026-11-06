@@ -2,7 +2,7 @@ name: Refresh activity card
 
 on:
   schedule:
-    - cron: '10 0 * * *' # 08:10 GMT+8
+    - cron: '17 * * * *' # Hourly. It only commits when the numbers change.
   workflow_dispatch:
 
 permissions:

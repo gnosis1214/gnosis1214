@@ -1,5 +1,5 @@
 // Regenerates the live activity card from real GitHub data, and syncs the README's
-// alt text and table to match. Run daily by .github/workflows/zg-refresh.yml.
+// alt text and table to match. Run hourly by .github/workflows/zg-refresh.yml.
 // Needs GITHUB_TOKEN. The Action's token sees what the public sees.
 //
 // GitHub always shows its own contribution grid on the profile, so this card must
@@ -13,10 +13,17 @@ const LOGIN = 'gnosis1214';
 const token = process.env.GITHUB_TOKEN;
 if (!token) { console.error('GITHUB_TOKEN is not set'); process.exit(1); }
 
+// Commits are dated in the author's time zone (GMT+8), but GitHub's default range stops
+// at today in UTC. From midnight to 8am in the Philippines that leaves new commits off
+// the end of the calendar, so ask for a day ahead. The span must stay within a year.
+const DAY = 86400000;
+const to = new Date(Date.now() + DAY);
+const from = new Date(to.getTime() - 365 * DAY);
+
 const res = await fetch('https://api.github.com/graphql', {
   method: 'POST',
   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'zg-profile-activity' },
-  body: JSON.stringify({ query: `query($l:String!){user(login:$l){contributionsCollection{totalCommitContributions contributionCalendar{totalContributions weeks{contributionDays{date contributionCount}}}}}}`, variables: { l: LOGIN } }),
+  body: JSON.stringify({ query: `query($l:String!,$from:DateTime!,$to:DateTime!){user(login:$l){contributionsCollection(from:$from,to:$to){totalCommitContributions contributionCalendar{totalContributions weeks{contributionDays{date contributionCount}}}}}}`, variables: { l: LOGIN, from: from.toISOString(), to: to.toISOString() } }),
 });
 const json = await res.json();
 if (!res.ok || json.errors) { console.error('GitHub API error', res.status, JSON.stringify(json.errors || json)); process.exit(1); }
@@ -77,7 +84,7 @@ async function card(mobile) {
   const d = new Doc(W, H, `Activity: ${stats.commits} commits, ${stats.activeDays} active days, longest streak ${stats.streak} days, busiest week ${stats.busiest} contributions. A cyclist climbs an elevation profile charting contributions per week.`);
   d.panel();
   heading(d, 'Activity', { x: pad, ghost: 'RIDE' });
-  if (!mobile) d.text('refreshed daily by GitHub Actions', W - pad, 76, { f: 'm4', size: 12, fill: T.faint, anchor: 'end' });
+  if (!mobile) d.text('refreshed hourly by GitHub Actions', W - pad, 76, { f: 'm4', size: 12, fill: T.faint, anchor: 'end' });
 
   tiles.forEach(([v, l], i) => {
     const x = pad + (i % cols) * (tw + gap), y = ty + Math.floor(i / cols) * (th + gap);
