@@ -6,7 +6,7 @@
 // never be a second grid. It charts weekly totals as a climb with a cyclist riding it,
 // and its figures are ones GitHub's section does not show.
 import fs from 'node:fs';
-import { Doc, T, heading, README, n } from './zg-lib.mjs';
+import { Doc, T, heading, README, ASSETS, n } from './zg-lib.mjs';
 import { rider } from './zg-rider.mjs';
 
 const LOGIN = 'gnosis1214';
@@ -23,6 +23,14 @@ if (!res.ok || json.errors) { console.error('GitHub API error', res.status, JSON
 
 const coll = json.data.user.contributionsCollection;
 const cal = coll.contributionCalendar;
+
+// A private profile can hide activity from the Action's token. Never replace a card
+// that has real numbers with an empty one: keep the last good version instead.
+if (cal.totalContributions === 0 && fs.existsSync(`${ASSETS}/zg-activity.svg`)) {
+  console.log('GitHub returned no contributions, so the existing activity card was kept.');
+  process.exit(0);
+}
+
 const days = cal.weeks.flatMap((w) => w.contributionDays);
 const weekly = cal.weeks.map((w) => ({ start: w.contributionDays[0].date, count: w.contributionDays.reduce((a, x) => a + x.contributionCount, 0) }));
 const peak = weekly.reduce((a, w) => (w.count > a.count ? w : a), weekly[0]);
