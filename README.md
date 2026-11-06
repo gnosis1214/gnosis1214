@@ -15,7 +15,7 @@
   <a href="https://github.com/gnosis1214/portfolio"><img src="./assets/zg-btn-code.svg" height="38" alt="Portfolio code"></a>
 </p>
 
-<h3 align="center">Hi, I'm Zeno 🏄</h3>
+<h3 align="center">Hi, I'm Zeno 🚴</h3>
 
 <p align="center">Full-stack web + AI developer working from Philippines (GMT+8). I build fast, conversion-focused websites, Shopify stores, web apps and AI automations for agencies, startups and small businesses in the US, UK, AU, SG and DE.</p>
 
