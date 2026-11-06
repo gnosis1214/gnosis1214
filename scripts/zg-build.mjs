@@ -13,7 +13,7 @@ async function button(file, label, { icon, primary, wide } = {}) {
   const w = Math.ceil(measure(label, 'b5', size) + 14 + iconW + 12 + 22);
   const d = new Doc(w, h, label);
   const fg = primary ? T.onCta : T.text;
-  d.add(`<rect x=".5" y=".5" width="${w - 1}" height="${h - 1}" rx="10" fill="${primary ? T.cta : T.panel}" stroke="${primary ? T.cta : 'rgba(79,166,255,.55)'}"/>`);
+  d.add(`<rect x=".5" y=".5" width="${w - 1}" height="${h - 1}" rx="10" fill="${primary ? T.cta : T.panel}" stroke="${primary ? T.cta : 'rgba(255,77,94,.55)'}"/>`);
   if (primary) {
     d.def(`<linearGradient id="zg-sh" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><clipPath id="zg-bc"><rect width="${w}" height="${h}" rx="10"/></clipPath>`);
     d.once('zg-sh', `@keyframes zg-sh{0%,70%{transform:translateX(-80px)}100%{transform:translateX(${w + 80}px)}}.zg-sh{animation:zg-sh 4.5s ease-in-out infinite;transform:translateX(-80px)}`);
@@ -74,7 +74,7 @@ async function terminal(mobile) {
   const d = new Doc(W, Math.ceil(H), 'Terminal showing what Zeno is doing right now: building Zana-G into a web development, SEO and AI agency, shipping agentic workflows with Claude Code, MCP servers and n8n, and going deeper on Next.js, headless commerce and LLM features. Ask about Shopify Liquid, Elementor at scale, llms.txt and AI-crawler readiness, or conversion tracking that actually fires.');
   d.panel({ fill: T.panel, decor: false });
   d.add(`<rect width="${W}" height="38" fill="${T.panel2}"/><path d="M0 38H${W}" stroke="${T.line}"/>`);
-  [0, 1, 2].forEach((i) => d.add(`<circle cx="${pad + i * 17}" cy="19" r="4.5" fill="${[T.red, T.faint, T.accent][i]}"/>`));
+  [0, 1, 2].forEach((i) => d.add(`<circle cx="${pad + i * 17}" cy="19" r="4.5" fill="${[T.red, T.faint, T.blue][i]}"/>`));
   d.text('zeno@zana-g: ~', W / 2, 23.5, { f: 'm4', size: 12, fill: T.faint, anchor: 'middle' });
 
   // Timeline, in seconds.
@@ -117,7 +117,7 @@ async function terminal(mobile) {
       d.add('</g>');
     } else {
       d.add(`<g class="${cls}">`);
-      if (e.kind === 'item' && e.first) d.text('>', pad, e.y, { f: 'm5', size, fill: T.red });
+      if (e.kind === 'item' && e.first) d.text('>', pad, e.y, { f: 'm5', size, fill: T.blush });
       d.text(e.text, pad + e.indent * cw, e.y, { f: 'm4', size, fill: e.kind === 'item' ? T.muted : T.text });
       d.add('</g>');
     }
@@ -142,11 +142,11 @@ const stroke = `fill="none" stroke="${T.accent}" stroke-width="1.75" stroke-line
 const GLYPHS = {
   blocks(d, c, y) {
     d.once('g-slide', `@keyframes g-slide{0%,12%{transform:translateX(20px);opacity:0}32%,82%{transform:none;opacity:1}100%{transform:translateX(-20px);opacity:0}}.g-slide{animation:g-slide 5s ease-in-out infinite}`);
-    return `<rect x="${c - 15}" y="${y - 16}" width="30" height="8" rx="2.5" ${stroke}/><rect class="g-slide" x="${c - 15}" y="${y - 4}" width="30" height="8" rx="2.5" fill="${T.red}"/><rect x="${c - 15}" y="${y + 8}" width="30" height="8" rx="2.5" ${stroke}/>`;
+    return `<rect x="${c - 15}" y="${y - 16}" width="30" height="8" rx="2.5" ${stroke}/><rect class="g-slide" x="${c - 15}" y="${y - 4}" width="30" height="8" rx="2.5" fill="${T.text}"/><rect x="${c - 15}" y="${y + 8}" width="30" height="8" rx="2.5" ${stroke}/>`;
   },
   bag(d, c, y) {
     d.once('g-drop', `@keyframes g-drop{0%,10%{transform:translateY(-26px);opacity:0}30%{opacity:1}55%,85%{transform:none;opacity:1}100%{transform:none;opacity:0}}.g-drop{animation:g-drop 3.8s ease-in infinite}`);
-    return `<path d="M${c - 13} ${y - 6}h26l3 23h-32z" ${stroke}/><path d="M${c - 6} ${y - 6}v-3a6 6 0 0 1 12 0v3" ${stroke}/><circle class="g-drop" cx="${c}" cy="${y + 6}" r="3.5" fill="${T.red}"/>`;
+    return `<path d="M${c - 13} ${y - 6}h26l3 23h-32z" ${stroke}/><path d="M${c - 6} ${y - 6}v-3a6 6 0 0 1 12 0v3" ${stroke}/><circle class="g-drop" cx="${c}" cy="${y + 6}" r="3.5" fill="${T.text}"/>`;
   },
   code(d, c, y) {
     d.once('g-pulse', `@keyframes g-pulse{0%,100%{opacity:.35}50%{opacity:1}}.g-pulse{animation:g-pulse 2.4s ease-in-out infinite}`);
@@ -155,7 +155,7 @@ const GLYPHS = {
   nodes(d, c, y) {
     d.once('g-run', `@keyframes g-run{from{stroke-dashoffset:120}to{stroke-dashoffset:0}}`);
     const tri = `M${c} ${y - 14}L${c + 15} ${y + 12}L${c - 15} ${y + 12}Z`;
-    return `<path d="${tri}" ${stroke} stroke-opacity=".4"/><path d="${tri}" pathLength="100" fill="none" stroke="${T.red}" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="20 100" style="animation:g-run 3s linear infinite"/>`
+    return `<path d="${tri}" ${stroke} stroke-opacity=".4"/><path d="${tri}" pathLength="100" fill="none" stroke="${T.text}" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="20 100" style="animation:g-run 3s linear infinite"/>`
       + [[c, y - 14], [c + 15, y + 12], [c - 15, y + 12]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="4.5" fill="${T.panel2}" stroke="${T.accent}" stroke-width="1.75"/>`).join('');
   },
   scan(d, c, y) {
@@ -164,7 +164,7 @@ const GLYPHS = {
     return `${bars}<g class="g-mag"><circle cx="${c}" cy="${y - 4}" r="8.5" fill="${T.panel2}" fill-opacity=".55" stroke="${T.text}" stroke-width="1.75"/><path d="M${c + 6} ${y + 2}l6 6" stroke="${T.text}" stroke-width="1.75" stroke-linecap="round"/></g>`;
   },
   rings(d, c, y) {
-    return `<circle cx="${c}" cy="${y}" r="4.5" fill="${T.red}"/><circle cx="${c}" cy="${y}" r="16" fill="none" stroke="${T.accent}" stroke-opacity=".2" stroke-width="1.25"/>${ping(d, c, y, { r: 4.5, dur: 2.8, grow: 4 })}${ping(d, c, y, { r: 4.5, dur: 2.8, delay: 1.4, grow: 4 })}`;
+    return `<circle cx="${c}" cy="${y}" r="4.5" fill="${T.text}"/><circle cx="${c}" cy="${y}" r="16" fill="none" stroke="${T.accent}" stroke-opacity=".2" stroke-width="1.25"/>${ping(d, c, y, { r: 4.5, dur: 2.8, grow: 4 })}${ping(d, c, y, { r: 4.5, dur: 2.8, delay: 1.4, grow: 4 })}`;
   },
 };
 
@@ -317,7 +317,7 @@ async function processGraph(mobile) {
     [x0, xLive].forEach((x) => d.add(`<circle cx="${x}" cy="${yMain}" r="5" fill="${T.panel}" stroke="${T.faint}" stroke-width="2"/>`));
     d.add(`<path d="${branch}" fill="none" stroke="${T.accent}" stroke-opacity=".45" stroke-width="2"/>`);
     const totalX = xLive - x0;
-    d.style(`@keyframes zg-node{0%,10%,100%{r:6px;fill:${T.panel}}2%,5%{r:8px;fill:${T.red}}}`);
+    d.style(`@keyframes zg-node{0%,10%,100%{r:6px;fill:${T.panel}}2%,5%{r:8px;fill:${T.text}}}`);
     STEPS.forEach(([t, s], i) => {
       const x = xs[i];
       const delay = n(((x - x0) / totalX) * dur);
@@ -340,7 +340,7 @@ async function processGraph(mobile) {
   const branch = `M${xMain} ${top - 6}C${xMain} ${top + 10} ${xTop} ${top - 2} ${xTop} ${top + 18}V${top + 18 + gap * 4}C${xTop} ${yEnd - 8} ${xMain} ${yEnd - 18} ${xMain} ${yEnd}`;
   d.add(`<path d="M${xMain} ${top - 10}V${yEnd + 6}" stroke="${T.line}" stroke-width="2"/>`);
   d.add(`<path d="${branch}" fill="none" stroke="${T.accent}" stroke-opacity=".45" stroke-width="2"/>`);
-  d.style(`@keyframes zg-node{0%,10%,100%{r:6px;fill:${T.panel}}2%,5%{r:8px;fill:${T.red}}}`);
+  d.style(`@keyframes zg-node{0%,10%,100%{r:6px;fill:${T.panel}}2%,5%{r:8px;fill:${T.text}}}`);
   STEPS.forEach(([t], i) => {
     const y = top + 18 + i * gap;
     d.add(`<circle cx="${xTop}" cy="${y}" r="6" fill="${T.panel}" stroke="${T.accent}" stroke-width="2" style="animation:zg-node ${dur}s linear ${n(((i + 0.5) / 6) * dur)}s infinite"/>`);

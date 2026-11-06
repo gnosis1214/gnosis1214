@@ -12,7 +12,7 @@ export const ASSETS = path.join(ROOT, 'assets');
 export const README = path.join(ROOT, 'README.md');
 const NM = path.join(ROOT, 'node_modules');
 
-// Theme tokens, sampled from Zeno's portrait: near-black navy, electric blue, neon red.
+// Theme tokens, sampled from Zeno's portrait. Red leads on near-black navy; blue is only a small accent.
 export const T = {
   bg: '#060911',
   panel: '#0B101D',
@@ -20,8 +20,10 @@ export const T = {
   text: '#F2F6FF',
   muted: '#B4C2DC',
   faint: '#7C8BAA',
-  line: 'rgba(140,175,255,.16)',
-  accent: '#4FA6FF',
+  line: 'rgba(255,170,180,.15)',
+  accent: '#FF4D5E',
+  blue: '#4FA6FF',
+  blush: '#FFC9CE',
   ice: '#8EDBFF',
   red: '#FF3346',
   redHi: '#FF4D5E',
@@ -110,7 +112,7 @@ export class Doc {
     this.def(`<clipPath id="zg-clip"><rect width="${this.w}" height="${this.h}" rx="${rx}"/></clipPath>`);
     this.add(`<g clip-path="url(#zg-clip)"><rect width="${this.w}" height="${this.h}" fill="${fill}"/>`);
     if (decor) {
-      this.def(`<pattern id="zg-grid" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".75" fill="${T.accent}" fill-opacity=".1"/></pattern><radialGradient id="zg-corner" cx="1" cy="0" r="1"><stop offset="0" stop-color="${T.accent}" stop-opacity=".16"/><stop offset=".6" stop-color="${T.accent}" stop-opacity="0"/></radialGradient><radialGradient id="zg-corner2" cx="0" cy="1" r="1"><stop offset="0" stop-color="${T.red}" stop-opacity=".1"/><stop offset=".6" stop-color="${T.red}" stop-opacity="0"/></radialGradient>`);
+      this.def(`<pattern id="zg-grid" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".75" fill="${T.accent}" fill-opacity=".1"/></pattern><radialGradient id="zg-corner" cx="1" cy="0" r="1"><stop offset="0" stop-color="${T.accent}" stop-opacity=".16"/><stop offset=".6" stop-color="${T.accent}" stop-opacity="0"/></radialGradient><radialGradient id="zg-corner2" cx="0" cy="1" r="1"><stop offset="0" stop-color="${T.blue}" stop-opacity=".07"/><stop offset=".6" stop-color="${T.blue}" stop-opacity="0"/></radialGradient>`);
       this.add(`<rect width="${this.w}" height="${this.h}" fill="url(#zg-grid)"/><rect width="${this.w}" height="${Math.min(this.h, 300)}" fill="url(#zg-corner)"/><rect y="${Math.max(0, this.h - 300)}" width="${this.w}" height="${Math.min(this.h, 300)}" fill="url(#zg-corner2)"/>`);
     }
     this._rx = rx;

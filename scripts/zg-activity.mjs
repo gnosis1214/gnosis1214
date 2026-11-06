@@ -57,7 +57,7 @@ function monotone(pts) {
 }
 
 // A small surfer, standing at the origin, facing right.
-const SURFER = `<g transform="translate(0 25)"><path d="M-15 -24Q0 -19 17 -30" fill="none" stroke="${T.red}" stroke-width="3.6" stroke-linecap="round"/>`
+const SURFER = `<g transform="translate(0 25)"><path d="M-15 -24Q0 -19 17 -30" fill="none" stroke="${T.blush}" stroke-width="3.6" stroke-linecap="round"/>`
   + `<g fill="none" stroke="${T.text}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M-6 -24L-8 -33L-1 -38L6 -34L7 -27"/><path d="M-1 -38L4 -47"/><path d="M4 -47L-8 -47M4 -47L14 -42"/></g><circle cx="7" cy="-52" r="3.3" fill="${T.text}"/>`
   + `<g fill="${T.accent}"><circle cx="-20" cy="-30" r="1.4" opacity=".8"/><circle cx="-25" cy="-25" r="1.1" opacity=".6"/><circle cx="-23" cy="-36" r="1" opacity=".45"/></g></g>`;
 
@@ -115,7 +115,7 @@ async function card(mobile) {
   if (weeks[peakIdx].count > 0) {
     const [px, py] = pts[peakIdx];
     const onRight = px < W / 2;
-    d.add(`<circle cx="${n(px)}" cy="${n(py)}" r="4.5" fill="${T.red}" stroke="${T.panel}" stroke-width="2"/>`);
+    d.add(`<circle cx="${n(px)}" cy="${n(py)}" r="4.5" fill="${T.text}" stroke="${T.panel}" stroke-width="2"/>`);
     d.text(String(weeks[peakIdx].count), px + (onRight ? 12 : -12), py + 5, { f: 'm5', size: 13, fill: T.text, anchor: onRight ? 'start' : 'end' });
   }
 
@@ -123,7 +123,7 @@ async function card(mobile) {
   waves(d, [
     { lambda: 230, amp: 6, y: base + 12, dur: 17, fill: 0.04, stroke: 0.3 },
     { lambda: 170, amp: 5, y: base + 28, dur: 12, fill: 0.06, stroke: 0.45, rev: true },
-    { lambda: 290, amp: 7, y: base + 46, dur: 21, fill: 0.08, stroke: 0.85, color: T.red },
+    { lambda: 290, amp: 7, y: base + 46, dur: 21, fill: 0.08, stroke: 0.85, color: T.blue },
     { lambda: 130, amp: 4, y: base + 62, dur: 9, fill: 0.12, stroke: 1, rev: true },
   ]);
 
