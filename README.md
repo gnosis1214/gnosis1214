@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://zana-g.com"><picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-hero-mobile.svg">
-    <img src="./assets/zg-hero.svg" width="100%" alt="Zeno, full-stack web + AI developer in the Philippines (GMT+8), open to freelance, contract and agency roles. Animated map connecting the Philippines to clients in the US, UK, AU, SG and DE.">
+    <img src="./assets/zg-hero.svg" width="100%" alt="Zeno, full-stack web + AI developer in the Philippines (GMT+8), open to freelance, contract and agency roles. Portrait inside animated rings, with WordPress, Shopify, Next.js, n8n, Claude and GA4 logos in orbit.">
   </picture></a>
 </p>
 
@@ -21,8 +21,22 @@
 
 <p align="center">
   <picture>
+    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-band-a-mobile.svg">
+    <img src="./assets/zg-band-a.svg" width="100%" alt="WordPress, Elementor, Shopify, Liquid, Next.js, React, n8n, MCP, AI agents, technical SEO, llms.txt, schema, GA4, GTM, Meta Pixel.">
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-terminal-mobile.svg">
     <img src="./assets/zg-terminal.svg" width="100%" alt="Terminal. Right now: building Zana-G into a web development, SEO and AI agency; shipping agentic workflows with Claude Code, MCP servers and n8n; going deeper on Next.js, headless commerce and LLM features for client sites. Ask me about Shopify Liquid, Elementor at scale, llms.txt and AI-crawler readiness, or conversion tracking that actually fires.">
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-reach-mobile.svg">
+    <img src="./assets/zg-reach.svg" width="100%" alt="Remote, worldwide. Animated map connecting the Philippines to clients in the United States, United Kingdom, Germany, Singapore and Australia. 5 client countries, 14 client projects, 30+ tools in the kit.">
   </picture>
 </p>
 
@@ -35,13 +49,20 @@
 
 <p align="center">
   <picture>
+    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-anatomy-mobile.svg">
+    <img src="./assets/zg-anatomy.svg" width="100%" alt="Anatomy of a build, as five stacked isometric layers. Design: Figma, Elementor. Front end: Next.js, React, Liquid, Tailwind. CMS and back end: WordPress, Shopify, Node, REST and GraphQL APIs. AI and automation: n8n, AI agents, MCP servers. Tracking and SEO: GA4, GTM, Meta Pixel, schema, llms.txt.">
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-stack-mobile.svg">
     <img src="./assets/zg-stack.svg" width="100%" alt="Stack. Platforms: WordPress, Elementor, WooCommerce, Shopify, GoHighLevel, Squarespace, Wix. SEO and tracking: GA4, GTM, Search Console, Meta Pixel. Full-stack: TypeScript, JavaScript, React, Next.js, Node, Tailwind, PHP, Liquid, HTML, CSS, GraphQL, REST APIs. AI and agents: n8n, MCP, Claude Code, Cursor, Copilot. Ops and design: Git, GitHub, Vercel, cPanel, Hostinger, Figma.">
   </picture>
 </p>
 
 <details>
-<summary><code>$ zeno --toolbox</code> &nbsp;Click to list every tool as text</summary>
+<summary><picture><img src="./assets/zg-cmd-toolbox.svg" height="40" alt="$ zeno --toolbox. Click to list every tool as text."></picture></summary>
 
 | | |
 | --- | --- |
@@ -55,9 +76,44 @@
 </details>
 
 <p align="center">
+  <picture>
+    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-band-b-mobile.svg">
+    <img src="./assets/zg-band-b.svg" width="100%" alt="Building for the web, one solution at a time. Scope, ship, polish, staging, live, Git.">
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-flow-ai-mobile.svg">
+    <img src="./assets/zg-flow-ai.svg" width="100%" alt="AI workflows. Example n8n flow: a new lead reaches an AI agent with MCP tools, gets routed by intent to the CRM, a drafted reply and a team alert, then a human approves before sending.">
+  </picture>
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-flow-tracking-mobile.svg">
+    <img src="./assets/zg-flow-tracking.svg" width="100%" alt="Tracking that fires. An ad click reaches a landing page, then a booking or form, then Google Tag Manager, which sends events to GA4, Meta Pixel and Google Ads.">
+  </picture>
+</p>
+
+<p align="center">
   <a href="https://zana-g.com/#zeno-cases"><picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-work-mobile.svg">
     <img src="./assets/zg-work.svg" width="100%" alt="Recent work, click for full case studies. Full Shopify store with custom Liquid sections, Printful and product bundles. Shopify landing page with an interactive 360° product viewer, parallax and scroll animations. Healthcare WordPress/Elementor build with schema and technical SEO. Law firm site: attorney profiles, mobile fixes and internal linking. llms.txt and AI-crawler optimization for a professional services firm. Booking and Meta Pixel conversion tracking for a salon.">
+  </picture></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/gnosis1214/portfolio"><picture>
+    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-repo-portfolio-mobile.svg">
+    <img src="./assets/zg-repo-portfolio.svg" width="100%" alt="Public repo gnosis1214/portfolio: portfolio site of Zeno, full-stack web + AI developer. HTML.">
+  </picture></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/gnosis1214/gnosis1214"><picture>
+    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-repo-profile-mobile.svg">
+    <img src="./assets/zg-repo-profile.svg" width="100%" alt="Public repo gnosis1214/gnosis1214: this profile. Animated SVGs generated with Node and refreshed daily by GitHub Actions. JavaScript.">
   </picture></a>
 </p>
 
@@ -69,19 +125,20 @@
 </p>
 
 <!-- zg-activity:start -->
-<picture>
-  <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-activity-mobile.svg">
-  <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 20 contributions in the last 12 months, 17 commits, 3 active days. Busiest recent week: 17 contributions, week of Nov 1.">
-</picture>
+<p align="center">
+  <picture>
+    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-activity-mobile.svg">
+    <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 35 contributions in the last 12 months, 28 commits, 5 active days. Busiest week: 34 contributions, week of Nov 1. A surfer rides a wave across the contribution grid.">
+  </picture>
+</p>
 
 <details>
-<summary><code>$ zeno --activity --table</code></summary>
+<summary><picture><img src="./assets/zg-cmd-table.svg" height="40" alt="$ zeno --activity --table. Click to see the numbers."></picture></summary>
 
 | Week of | Contributions |
 | --- | --: |
 | Oct 4 | 1 |
-| Oct 25 | 2 |
-| Nov 1 | 17 |
+| Nov 1 | 34 |
 
 </details>
 <!-- zg-activity:end -->
@@ -89,12 +146,12 @@
 <p align="center">
   <a href="https://zana-g.com/#zeno-contact"><picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-contact-mobile.svg">
-    <img src="./assets/zg-contact.svg" width="100%" alt="Open to freelance, contract and agency roles. Building for the web, one solution at a time. Click to work with me.">
+    <img src="./assets/zg-contact.svg" width="100%" alt="Open to freelance, contract and agency roles. Building for the web, one solution at a time. A sun setting over a digital sea, with palm trees. Click to work with me.">
   </picture></a>
 </p>
 
 <details>
-<summary><code>$ zeno --plain-text</code> &nbsp;Click for this whole profile without graphics</summary>
+<summary><picture><img src="./assets/zg-cmd-plain.svg" height="40" alt="$ zeno --plain-text. Click for this whole profile without graphics."></picture></summary>
 
 #### Right now
 

@@ -79,26 +79,36 @@ export class Doc {
   uid(p = 'zg-') { return p + (++this.count).toString(36); }
 
   // Returns a <text> element and records the glyphs it needs for the font subset.
-  t(s, x, y, { f = 'b4', size = 14, fill = T.text, anchor, ls, cls, op, style } = {}) {
+  t(s, x, y, { f = 'b4', size = 14, fill = T.text, anchor, ls, cls, op, style, stroke, sw } = {}) {
+    this.use(f, s);
+    const a = [`x="${n(x)}"`, `y="${n(y)}"`, `font-size="${size}"`, `fill="${fill}"`, `class="zg-${f}${cls ? ' ' + cls : ''}"`];
+    if (anchor) a.push(`text-anchor="${anchor}"`);
+    if (ls) a.push(`letter-spacing="${ls}"`);
+    if (op !== undefined) a.push(`opacity="${op}"`);
+    if (stroke) a.push(`stroke="${stroke}"`, `stroke-width="${sw ?? 1}"`);
+    if (style) a.push(`style="${style}"`);
+    return `<text ${a.join(' ')}>${esc(s)}</text>`;
+  }
+  text(...args) { return this.add(this.t(...args)); }
+
+  // Records glyphs for text written by hand, such as a <textPath>.
+  use(f, s) {
     const fnt = font(f);
     const set = (this.chars[f] ||= new Set());
     for (const c of s) {
       if (fnt.charToGlyphIndex(c) === 0 && c !== ' ') throw new Error(`Glyph "${c}" is missing from font ${f} (in "${s}")`);
       set.add(c);
     }
-    const a = [`x="${n(x)}"`, `y="${n(y)}"`, `font-size="${size}"`, `fill="${fill}"`, `class="zg-${f}${cls ? ' ' + cls : ''}"`];
-    if (anchor) a.push(`text-anchor="${anchor}"`);
-    if (ls) a.push(`letter-spacing="${ls}"`);
-    if (op !== undefined) a.push(`opacity="${op}"`);
-    if (style) a.push(`style="${style}"`);
-    return `<text ${a.join(' ')}>${esc(s)}</text>`;
   }
-  text(...args) { return this.add(this.t(...args)); }
 
   // Dark rounded panel plus a clip group. Pair with close().
-  panel({ rx = 18, fill = T.panel } = {}) {
+  panel({ rx = 18, fill = T.panel, decor = true } = {}) {
     this.def(`<clipPath id="zg-clip"><rect width="${this.w}" height="${this.h}" rx="${rx}"/></clipPath>`);
     this.add(`<g clip-path="url(#zg-clip)"><rect width="${this.w}" height="${this.h}" fill="${fill}"/>`);
+    if (decor) {
+      this.def(`<pattern id="zg-grid" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".75" fill="${T.accent}" fill-opacity=".1"/></pattern><radialGradient id="zg-corner" cx="1" cy="0" r="1"><stop offset="0" stop-color="${T.accent}" stop-opacity=".12"/><stop offset=".6" stop-color="${T.accent}" stop-opacity="0"/></radialGradient>`);
+      this.add(`<rect width="${this.w}" height="${this.h}" fill="url(#zg-grid)"/><rect width="${this.w}" height="${Math.min(this.h, 300)}" fill="url(#zg-corner)"/>`);
+    }
     this._rx = rx;
     return this;
   }
@@ -129,7 +139,10 @@ export class Doc {
 }
 
 // Section title in the portfolio's "// label" style. No numbering.
-export function heading(d, title, { hint, x = 28, y = 48, size = 22 } = {}) {
+export function heading(d, title, { hint, x = 28, y = 48, size = 22, ghost } = {}) {
+  // Oversized outlined word behind the title, for graphic weight.
+  // On phones it would collide with a long title, so it only appears behind short ones.
+  if (ghost && (d.w >= 500 || title.length <= 13)) d.text(ghost, d.w - 12, y + 26, { f: 'd7', size: d.w < 500 ? 62 : 104, fill: 'none', stroke: T.accent, sw: 1, op: 0.16, anchor: 'end', ls: -2 });
   d.text('//', x, y, { f: 'm5', size: size - 6, fill: T.accent });
   d.text(title, x + 28, y, { f: 'd5', size, fill: T.text });
   if (hint) {
@@ -137,6 +150,28 @@ export function heading(d, title, { hint, x = 28, y = 48, size = 22 } = {}) {
     d.text(hint, right - 19, y - 1, { f: 'm4', size: 12, fill: T.faint, anchor: 'end' });
     d.add(arrow(right - 9, y - 6, T.accent));
   }
+}
+
+// Simple Icons logo, centred on (cx, cy).
+export const logo = (ic, cx, cy, s, color, extra = '') => {
+  const k = s / 24;
+  return `<path transform="translate(${n(cx - s / 2)} ${n(cy - s / 2)}) scale(${n(k)})" d="${ic.path}" fill="${color}"${extra}/>`;
+};
+
+// A logo's real brand colour, lightened only as far as needed to read on near-black.
+export function brand(ic, min = 4.2) {
+  const lum = (c) => {
+    const v = c.map((x) => { const s = x / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; });
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  };
+  const rgb = [0, 2, 4].map((i) => parseInt(ic.hex.slice(i, i + 2), 16));
+  const bg = lum([27, 25, 22]);
+  let c = rgb;
+  for (let t = 0; t <= 1; t += 0.05) {
+    c = rgb.map((x) => Math.round(x + (255 - x) * t));
+    if ((lum(c) + 0.05) / (bg + 0.05) >= min) break;
+  }
+  return `#${c.map((x) => x.toString(16).padStart(2, '0')).join('')}`;
 }
 
 // Small up-right arrow, drawn so it needs no glyph.
