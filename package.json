@@ -1,0 +1,21 @@
+{
+  "name": "zg-github-profile",
+  "private": true,
+  "type": "module",
+  "description": "Generates the animated SVG graphics used by the gnosis1214 profile README",
+  "scripts": {
+    "build": "node scripts/zg-build.mjs",
+    "activity": "node scripts/zg-activity.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "d3-geo": "^3.1.2",
+    "opentype.js": "^2.0.0",
+    "simple-icons": "^16.36.0",
+    "subset-font": "^2.9.0",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  }
+}
