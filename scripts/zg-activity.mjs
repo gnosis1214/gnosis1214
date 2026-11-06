@@ -1,6 +1,8 @@
 // Regenerates the live activity card from real GitHub data, and syncs the README's
 // alt text and table to match. Run hourly by .github/workflows/zg-refresh.yml.
-// Needs GITHUB_TOKEN. The Action's token sees what the public sees.
+// Needs GITHUB_TOKEN. The Action's token sees what the public sees, so private commits
+// reach it only as restrictedContributionsCount, and only while the profile's
+// "Private contributions" setting is on.
 //
 // GitHub always shows its own contribution grid on the profile, so this card must
 // never be a second grid. It charts weekly totals as a climb with a cyclist riding it,
@@ -23,7 +25,7 @@ const from = new Date(to.getTime() - 365 * DAY);
 const res = await fetch('https://api.github.com/graphql', {
   method: 'POST',
   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'zg-profile-activity' },
-  body: JSON.stringify({ query: `query($l:String!,$from:DateTime!,$to:DateTime!){user(login:$l){contributionsCollection(from:$from,to:$to){totalCommitContributions contributionCalendar{totalContributions weeks{contributionDays{date contributionCount}}}}}}`, variables: { l: LOGIN, from: from.toISOString(), to: to.toISOString() } }),
+  body: JSON.stringify({ query: `query($l:String!,$from:DateTime!,$to:DateTime!){user(login:$l){contributionsCollection(from:$from,to:$to){totalCommitContributions restrictedContributionsCount contributionCalendar{totalContributions weeks{contributionDays{date contributionCount}}}}}}`, variables: { l: LOGIN, from: from.toISOString(), to: to.toISOString() } }),
 });
 const json = await res.json();
 if (!res.ok || json.errors) { console.error('GitHub API error', res.status, JSON.stringify(json.errors || json)); process.exit(1); }
@@ -46,7 +48,9 @@ let streak = 0, run = 0;
 for (const x of days) { run = x.contributionCount > 0 ? run + 1 : 0; if (run > streak) streak = run; }
 const stats = {
   total: cal.totalContributions,
-  commits: coll.totalCommitContributions,
+  // Public commits plus the anonymised private count, which can also include any
+  // private issues and pull requests.
+  commits: coll.totalCommitContributions + coll.restrictedContributionsCount,
   activeDays: days.filter((x) => x.contributionCount > 0).length,
   streak,
   busiest: peak.count,
