@@ -624,8 +624,8 @@ function palm(x, base, h, lean, scale = 1) {
 }
 
 export async function contact(mobile, save) {
-  const W = mobile ? 420 : 880, H = mobile ? 560 : 470;
-  const horizon = mobile ? 372 : 300;
+  const W = mobile ? 420 : 880, H = mobile ? 584 : 470;
+  const horizon = mobile ? 396 : 300;
   const d = new Doc(W, H, 'Open to freelance, contract and agency roles. Building for the web, one solution at a time. Opens the contact section on zana-g.com.');
   d.panel({ fill: T.bg, decor: false });
   d.def(`<linearGradient id="zg-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.bg}"/><stop offset=".62" stop-color="#2A170C"/><stop offset="1" stop-color="#6E3A1B"/></linearGradient>`);
