@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://zana-g.com"><picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-hero-mobile.svg">
-    <img src="./assets/zg-hero.svg" width="100%" alt="Zeno, full-stack web + AI developer in the Philippines (GMT+8), open to freelance, contract and agency roles. Portrait inside animated rings, with WordPress, Shopify, Next.js, n8n, Claude and GA4 logos in orbit.">
+    <img src="./assets/zg-hero.svg" width="100%" alt="Zeno, full-stack web + AI developer in the Philippines (GMT+8), open to freelance, contract and agency roles. Portrait of Zeno from behind, in a black coat among floating code panels, inside animated rings, with WordPress, Shopify, Next.js, n8n, Claude and GA4 logos in orbit.">
   </picture></a>
 </p>
 
@@ -114,7 +114,7 @@
 <p align="center">
   <picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-activity-mobile.svg">
-    <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 22 commits, 4 active days, longest streak 2 days. Busiest week: 22 contributions, week of Nov 1. A surfer rides a swell charting contributions per week.">
+    <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 34 commits, 5 active days, longest streak 2 days. Busiest week: 40 contributions, week of Nov 1. A surfer rides a swell charting contributions per week.">
   </picture>
 </p>
 
@@ -124,8 +124,7 @@
 | Week of | Contributions |
 | --- | --: |
 | Oct 4 | 1 |
-| Oct 25 | 2 |
-| Nov 1 | 22 |
+| Nov 1 | 40 |
 
 </details>
 <!-- zg-activity:end -->
@@ -133,7 +132,7 @@
 <p align="center">
   <a href="https://zana-g.com/#zeno-contact"><picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-contact-mobile.svg">
-    <img src="./assets/zg-contact.svg" width="100%" alt="Open to freelance, contract and agency roles. Building for the web, one solution at a time. A sun setting over a digital sea, with palm trees. Click to work with me.">
+    <img src="./assets/zg-contact.svg" width="100%" alt="Open to freelance, contract and agency roles. Building for the web, one solution at a time. A red sun setting behind a lit city over a digital sea, with palm trees. Click to work with me.">
   </picture></a>
 </p>
 

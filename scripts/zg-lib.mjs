@@ -12,17 +12,21 @@ export const ASSETS = path.join(ROOT, 'assets');
 export const README = path.join(ROOT, 'README.md');
 const NM = path.join(ROOT, 'node_modules');
 
-// Brand tokens, taken from the zana-g.com theme.
+// Theme tokens, sampled from Zeno's portrait: near-black navy, electric blue, neon red.
 export const T = {
-  bg: '#0B0A09',
-  panel: '#131211',
-  panel2: '#1B1916',
-  text: '#F5F5F5',
-  muted: '#C9C3BC',
-  faint: '#8F8880',
-  line: 'rgba(229,229,229,.14)',
-  accent: '#D4B494',
-  brown: '#B89B7B',
+  bg: '#060911',
+  panel: '#0B101D',
+  panel2: '#111A2E',
+  text: '#F2F6FF',
+  muted: '#B4C2DC',
+  faint: '#7C8BAA',
+  line: 'rgba(140,175,255,.16)',
+  accent: '#4FA6FF',
+  ice: '#8EDBFF',
+  red: '#FF3346',
+  redHi: '#FF4D5E',
+  cta: '#E5162B',
+  onCta: '#FFFFFF',
 };
 
 const SANS = "system-ui,-apple-system,'Segoe UI',Roboto,sans-serif";
@@ -106,8 +110,8 @@ export class Doc {
     this.def(`<clipPath id="zg-clip"><rect width="${this.w}" height="${this.h}" rx="${rx}"/></clipPath>`);
     this.add(`<g clip-path="url(#zg-clip)"><rect width="${this.w}" height="${this.h}" fill="${fill}"/>`);
     if (decor) {
-      this.def(`<pattern id="zg-grid" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".75" fill="${T.accent}" fill-opacity=".1"/></pattern><radialGradient id="zg-corner" cx="1" cy="0" r="1"><stop offset="0" stop-color="${T.accent}" stop-opacity=".12"/><stop offset=".6" stop-color="${T.accent}" stop-opacity="0"/></radialGradient>`);
-      this.add(`<rect width="${this.w}" height="${this.h}" fill="url(#zg-grid)"/><rect width="${this.w}" height="${Math.min(this.h, 300)}" fill="url(#zg-corner)"/>`);
+      this.def(`<pattern id="zg-grid" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".75" fill="${T.accent}" fill-opacity=".1"/></pattern><radialGradient id="zg-corner" cx="1" cy="0" r="1"><stop offset="0" stop-color="${T.accent}" stop-opacity=".16"/><stop offset=".6" stop-color="${T.accent}" stop-opacity="0"/></radialGradient><radialGradient id="zg-corner2" cx="0" cy="1" r="1"><stop offset="0" stop-color="${T.red}" stop-opacity=".1"/><stop offset=".6" stop-color="${T.red}" stop-opacity="0"/></radialGradient>`);
+      this.add(`<rect width="${this.w}" height="${this.h}" fill="url(#zg-grid)"/><rect width="${this.w}" height="${Math.min(this.h, 300)}" fill="url(#zg-corner)"/><rect y="${Math.max(0, this.h - 300)}" width="${this.w}" height="${Math.min(this.h, 300)}" fill="url(#zg-corner2)"/>`);
     }
     this._rx = rx;
     return this;
@@ -143,7 +147,7 @@ export function heading(d, title, { hint, x = 28, y = 48, size = 22, ghost } = {
   // Oversized outlined word behind the title, for graphic weight.
   // On phones it would collide with a long title, so it only appears behind short ones.
   if (ghost && (d.w >= 500 || title.length <= 13)) d.text(ghost, d.w - 12, y + 26, { f: 'd7', size: d.w < 500 ? 62 : 104, fill: 'none', stroke: T.accent, sw: 1, op: 0.16, anchor: 'end', ls: -2 });
-  d.text('//', x, y, { f: 'm5', size: size - 6, fill: T.accent });
+  d.text('//', x, y, { f: 'm5', size: size - 6, fill: T.red });
   d.text(title, x + 28, y, { f: 'd5', size, fill: T.text });
   if (hint) {
     const right = d.w - x;
@@ -165,7 +169,7 @@ export function brand(ic, min = 4.2) {
     return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
   };
   const rgb = [0, 2, 4].map((i) => parseInt(ic.hex.slice(i, i + 2), 16));
-  const bg = lum([27, 25, 22]);
+  const bg = lum([17, 26, 46]);
   let c = rgb;
   for (let t = 0; t <= 1; t += 0.05) {
     c = rgb.map((x) => Math.round(x + (255 - x) * t));
@@ -182,14 +186,14 @@ export const arrow = (cx, cy, color, s = 4.5) =>
 export function waves(d, layers) {
   const H = d.h, W = d.w;
   layers.forEach((L, i) => {
-    const { lambda: l, amp: a, y, dur, fill = 0, stroke = 0.4, width = 1.25, rev } = L;
+    const { lambda: l, amp: a, y, dur, fill = 0, stroke = 0.4, width = 1.25, rev, color = T.accent } = L;
     const half = l / 2;
     let p = `M0 ${y}Q${n(half / 2)} ${y - a} ${half} ${y}`;
     for (let x = l; x <= W + 2 * l; x += half) p += `T${n(x)} ${y}`;
     const area = `${p}V${H}H0Z`;
     const name = `zg-w${i}`;
     d.once(name, `@keyframes ${name}{from{transform:translateX(${rev ? -l : 0}px)}to{transform:translateX(${rev ? 0 : -l}px)}}.${name}{animation:${name} ${dur}s linear infinite}`);
-    d.add(`<g class="${name}"><path d="${area}" fill="${T.accent}" fill-opacity="${fill}"/><path d="${p}" fill="none" stroke="${T.accent}" stroke-opacity="${stroke}" stroke-width="${width}"/></g>`);
+    d.add(`<g class="${name}"><path d="${area}" fill="${color}" fill-opacity="${fill}"/><path d="${p}" fill="none" stroke="${color}" stroke-opacity="${stroke}" stroke-width="${width}"/></g>`);
   });
 }
 

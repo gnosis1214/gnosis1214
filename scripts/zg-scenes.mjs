@@ -16,11 +16,12 @@ const landTopo = JSON.parse(fs.readFileSync(require.resolve('world-atlas/land-11
 const land = feature(landTopo, landTopo.objects.land);
 const AVATAR = fs.readFileSync(path.join(HERE, 'src/zg-avatar.jpg')).toString('base64');
 
-const SUN = { hi: '#F8E3C0', mid: '#E9A96B', low: '#B5622F', deep: '#5A2E14' };
+// Moving highlights and the closing sun, from the portrait's reds.
+const SUN = { top: '#FFB4BA', hi: '#FF4D5E', mid: '#F0263C', low: '#A9172D', deep: '#3A0A1E' };
 const seeded = (s) => () => (s = (s * 16807) % 2147483647) / 2147483647;
 const spin = (cx, cy, dur, rev) => `transform-origin:${n(cx)}px ${n(cy)}px;animation:${rev ? 'zg-rev' : 'zg-rot'} ${dur}s linear infinite`;
 const ROT = '@keyframes zg-rot{to{transform:rotate(360deg)}}@keyframes zg-rev{to{transform:rotate(-360deg)}}';
-const tan = (o) => `rgba(212,180,148,${o})`;
+const acc = (o) => `rgba(79,166,255,${o})`;
 
 function stars(d, W, H, count, skip = () => false) {
   const rnd = seeded(11);
@@ -36,11 +37,51 @@ function stars(d, W, H, count, skip = () => false) {
 }
 
 /* ---------- HERO ---------- */
+// Background taken from the portrait: window lights, tilted code panels, red circuit nodes.
+function cyberBackdrop(d, W, H, { seed = 7, clear = () => false, panels = [], reds = [], cols = 12 }) {
+  const rnd = seeded(seed);
+  d.once('zg-tw', '@keyframes zg-tw{0%,100%{opacity:.15}50%{opacity:.9}}');
+  d.once('zg-pl', '@keyframes zg-pl{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}');
+
+  let still = '', live = '';
+  for (let c = 0; c < cols; c++) {
+    const x = n(10 + rnd() * (W - 20));
+    let y = rnd() * H * 0.55;
+    const count = 3 + Math.floor(rnd() * 6), tone = rnd() > 0.72 ? T.ice : T.accent;
+    for (let i = 0; i < count; i++) {
+      const w = 6 + Math.floor(rnd() * 8), h = 4 + Math.floor(rnd() * 4), o = n(0.08 + rnd() * 0.3);
+      if (!clear(x, y) && !clear(x + w, y + h)) {
+        const el = `<rect x="${x}" y="${n(y)}" width="${w}" height="${h}" rx="1.5" fill="${tone}"`;
+        if (rnd() > 0.82) live += `${el} style="animation:zg-tw ${n(3 + rnd() * 4)}s ease-in-out ${n(rnd() * 3)}s infinite"/>`;
+        else still += `${el} opacity="${o}"/>`;
+      }
+      y += h + 5 + rnd() * 9;
+    }
+  }
+  d.add(still + live);
+
+  panels.forEach(({ x, y, w, h, skew }) => {
+    let lines = '';
+    for (let r = 0; r < Math.floor((h - 18) / 8); r++) {
+      lines += `<rect x="${n(8 + (r % 3) * 5)}" y="${16 + r * 8}" width="${n((w - 24) * (0.35 + rnd() * 0.6))}" height="2.5" rx="1" fill="${T.accent}" opacity="${n(0.25 + rnd() * 0.3)}"/>`;
+    }
+    d.add(`<g transform="matrix(1 ${skew} 0 1 ${x} ${y})"><rect width="${w}" height="${h}" rx="3" fill="${T.accent}" fill-opacity=".05" stroke="${acc(0.4)}"/><path d="M0 11H${w}" stroke="${acc(0.25)}"/><circle cx="6" cy="6" r="1.6" fill="${T.red}"/>${lines}</g>`);
+  });
+
+  d.def(`<radialGradient id="zg-nd"><stop offset="0" stop-color="${T.redHi}" stop-opacity=".9"/><stop offset="1" stop-color="${T.red}" stop-opacity="0"/></radialGradient>`);
+  reds.forEach(([x, y1, y2, ny], i) => {
+    d.add(`<path d="M${x} ${y1}V${y2}" stroke="${T.red}" stroke-opacity=".55" stroke-width="1.25"/>`);
+    d.add(`<circle class="zg-c" cx="${x}" cy="${ny}" r="13" fill="url(#zg-nd)" style="animation:zg-pl ${n(2.6 + i * 0.5)}s ease-in-out ${n(i * 0.4)}s infinite"/><circle cx="${x}" cy="${ny}" r="2.2" fill="#fff"/>`);
+  });
+}
+
 function hud(d, cx, cy, k) {
   d.once('zg-rot', ROT);
   const r = { av: 88 * k, inner: 96 * k, text: 110 * k, orbit: 152 * k, outer: 188 * k };
-  d.def(`<radialGradient id="zg-halo"><stop offset="0" stop-color="${SUN.mid}" stop-opacity=".36"/><stop offset=".5" stop-color="${T.accent}" stop-opacity=".1"/><stop offset="1" stop-color="${T.accent}" stop-opacity="0"/></radialGradient>`);
-  d.add(`<circle cx="${cx}" cy="${cy}" r="${n(r.outer * 1.4)}" fill="url(#zg-halo)"/>`);
+
+  // Two-sided light, as on the portrait: red from the left, blue from the right.
+  d.def(`<radialGradient id="zg-hr"><stop offset="0" stop-color="${T.red}" stop-opacity=".34"/><stop offset="1" stop-color="${T.red}" stop-opacity="0"/></radialGradient><radialGradient id="zg-hb"><stop offset="0" stop-color="${T.accent}" stop-opacity=".34"/><stop offset="1" stop-color="${T.accent}" stop-opacity="0"/></radialGradient><linearGradient id="zg-rim" x1="0" x2="1"><stop offset="0" stop-color="${T.red}"/><stop offset="1" stop-color="${T.accent}"/></linearGradient>`);
+  d.add(`<circle cx="${n(cx - r.outer * 0.42)}" cy="${cy}" r="${n(r.outer * 1.08)}" fill="url(#zg-hr)"/><circle cx="${n(cx + r.outer * 0.42)}" cy="${cy}" r="${n(r.outer * 1.08)}" fill="url(#zg-hb)"/>`);
 
   // Outer tick ring and broken arcs.
   let ticks = '';
@@ -48,22 +89,23 @@ function hud(d, cx, cy, k) {
     const c = Math.cos((a * Math.PI) / 180), s = Math.sin((a * Math.PI) / 180), len = a % 30 === 0 ? 10 * k : 4 * k;
     ticks += `M${n(cx + c * r.outer)} ${n(cy + s * r.outer)}L${n(cx + c * (r.outer - len))} ${n(cy + s * (r.outer - len))}`;
   }
-  d.add(`<path d="${ticks}" stroke="${tan(0.5)}" style="${spin(cx, cy, 120, true)}"/>`);
-  d.add(`<circle cx="${cx}" cy="${cy}" r="${n(r.outer + 9 * k)}" fill="none" stroke="${T.accent}" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="110 50 16 50 240 90" style="${spin(cx, cy, 70)}"/>`);
+  d.add(`<path d="${ticks}" stroke="${acc(0.55)}" style="${spin(cx, cy, 120, true)}"/>`);
+  d.add(`<circle cx="${cx}" cy="${cy}" r="${n(r.outer + 9 * k)}" fill="none" stroke="${T.accent}" stroke-width="1.75" stroke-linecap="round" stroke-dasharray="110 50 16 50 240 90" style="${spin(cx, cy, 70)}"/>`);
+  d.add(`<circle cx="${cx}" cy="${cy}" r="${n(r.outer + 15 * k)}" fill="none" stroke="${T.red}" stroke-width="1.75" stroke-linecap="round" stroke-dasharray="70 180 24 300" style="${spin(cx, cy, 46, true)}"/>`);
 
-  // Radar sweep behind the avatar.
+  // Radar sweep behind the portrait.
   const a0 = -0.55, a1 = 0.1;
-  d.add(`<path d="M${cx} ${cy}L${n(cx + Math.cos(a0) * r.outer)} ${n(cy + Math.sin(a0) * r.outer)}A${n(r.outer)} ${n(r.outer)} 0 0 1 ${n(cx + Math.cos(a1) * r.outer)} ${n(cy + Math.sin(a1) * r.outer)}Z" fill="${T.accent}" fill-opacity=".09" style="${spin(cx, cy, 11)}"/>`);
+  d.add(`<path d="M${cx} ${cy}L${n(cx + Math.cos(a0) * r.outer)} ${n(cy + Math.sin(a0) * r.outer)}A${n(r.outer)} ${n(r.outer)} 0 0 1 ${n(cx + Math.cos(a1) * r.outer)} ${n(cy + Math.sin(a1) * r.outer)}Z" fill="${T.red}" fill-opacity=".12" style="${spin(cx, cy, 11)}"/>`);
 
   // Orbit carrying the main tools. Logos counter-rotate to stay upright.
-  d.add(`<circle cx="${cx}" cy="${cy}" r="${n(r.orbit)}" fill="none" stroke="${tan(0.28)}" stroke-dasharray="2 7" stroke-linecap="round"/>`);
+  d.add(`<circle cx="${cx}" cy="${cy}" r="${n(r.orbit)}" fill="none" stroke="${acc(0.35)}" stroke-dasharray="2 7" stroke-linecap="round"/>`);
   const tools = [si.siWordpress, si.siShopify, si.siNextdotjs, si.siN8n, si.siClaude, si.siGoogleanalytics];
   const dur = 64;
   d.add(`<g style="${spin(cx, cy, dur)}">`);
   tools.forEach((ic, i) => {
     const a = (i / tools.length) * Math.PI * 2 - Math.PI / 2;
     const x = n(cx + Math.cos(a) * r.orbit), y = n(cy + Math.sin(a) * r.orbit);
-    d.add(`<g style="${spin(x, y, dur, true)}"><circle cx="${x}" cy="${y}" r="${n(20 * k)}" fill="${T.panel2}" stroke="${tan(0.5)}"/>${logo(ic, x, y, n(21 * k), brand(ic))}</g>`);
+    d.add(`<g style="${spin(x, y, dur, true)}"><circle cx="${x}" cy="${y}" r="${n(20 * k)}" fill="${T.panel2}" stroke="${acc(0.6)}"/>${logo(ic, x, y, n(21 * k), brand(ic))}</g>`);
   });
   d.add('</g>');
 
@@ -71,16 +113,16 @@ function hud(d, cx, cy, k) {
   const ring = 'WORDPRESS · SHOPIFY · NEXT.JS · N8N · MCP · TECHNICAL SEO · TRACKING · ';
   d.use('m5', ring);
   d.def(`<path id="zg-tr" d="M${n(cx - r.text)} ${cy}a${n(r.text)} ${n(r.text)} 0 1 1 ${n(r.text * 2)} 0a${n(r.text)} ${n(r.text)} 0 1 1 ${n(-r.text * 2)} 0"/>`);
-  d.add(`<g style="${spin(cx, cy, 34)}"><text class="zg-m5" font-size="${n(10.5 * k)}" fill="${T.accent}"><textPath href="#zg-tr" textLength="${n(2 * Math.PI * r.text - 2)}">${ring}</textPath></text></g>`);
+  d.add(`<g style="${spin(cx, cy, 34)}"><text class="zg-m5" font-size="${n(10.5 * k)}" fill="${T.ice}"><textPath href="#zg-tr" textLength="${n(2 * Math.PI * r.text - 2)}">${ring}</textPath></text></g>`);
 
-  // Avatar.
-  const s = r.av * 2 * 1.3;
+  // Portrait.
+  const s = r.av * 2.04;
   d.def(`<clipPath id="zg-av"><circle cx="${cx}" cy="${cy}" r="${n(r.av)}"/></clipPath>`);
-  d.add(`<circle cx="${cx}" cy="${cy}" r="${n(r.inner)}" fill="${T.bg}" stroke="${T.accent}" stroke-width="1.5"/>`);
-  d.add(`<image href="data:image/jpeg;base64,${AVATAR}" x="${n(cx - s / 2)}" y="${n(cy - s * 0.4)}" width="${n(s)}" height="${n(s)}" clip-path="url(#zg-av)"/>`);
+  d.add(`<circle cx="${cx}" cy="${cy}" r="${n(r.inner)}" fill="${T.bg}" stroke="url(#zg-rim)" stroke-width="2.5"/>`);
+  d.add(`<image href="data:image/jpeg;base64,${AVATAR}" x="${n(cx - s / 2)}" y="${n(cy - s / 2)}" width="${n(s)}" height="${n(s)}" clip-path="url(#zg-av)"/>`);
   const lx = n(cx + Math.cos(0.8) * r.inner), ly = n(cy + Math.sin(0.8) * r.inner);
-  d.add(`<circle cx="${lx}" cy="${ly}" r="${n(6.5 * k)}" fill="${T.accent}" stroke="${T.bg}" stroke-width="2.5"/>`);
-  d.add(ping(d, lx, ly, { r: n(6.5 * k), dur: 2.4, grow: 3 }));
+  d.add(`<circle cx="${lx}" cy="${ly}" r="${n(6.5 * k)}" fill="${T.red}" stroke="${T.bg}" stroke-width="2.5"/>`);
+  d.add(ping(d, lx, ly, { r: n(6.5 * k), dur: 2.4, grow: 3, color: T.red }));
 }
 
 export async function hero(mobile, save) {
@@ -88,7 +130,12 @@ export async function hero(mobile, save) {
   const d = new Doc(W, H, 'Zeno, full-stack web and AI developer based in the Philippines, open to freelance, contract and agency roles.');
   d.panel({ fill: T.bg, decor: false });
   const typedY = mobile ? 226 : 268;
-  stars(d, W, mobile ? 300 : 360, mobile ? 70 : 110, (x, y) => x < (mobile ? 330 : 400) && y > typedY - 26 && y < typedY + 12);
+  // The typing line paints its own background, so nothing may sit behind it.
+  const clear = (x, y) => x < (mobile ? 330 : 400) && y > typedY - 26 && y < typedY + 14;
+  stars(d, W, mobile ? 300 : 360, mobile ? 40 : 60, clear);
+  cyberBackdrop(d, W, H - 90, mobile
+    ? { seed: 19, clear, cols: 9, panels: [{ x: 312, y: 70, w: 96, h: 76, skew: -0.1 }, { x: 12, y: 290, w: 64, h: 58, skew: 0.1 }, { x: 350, y: 300, w: 80, h: 68, skew: -0.08 }], reds: [[398, 0, 160, 96], [28, 372, 548, 470], [404, 420, 560, 506]] }
+    : { seed: 7, clear, cols: 15, panels: [{ x: 416, y: 20, w: 96, h: 70, skew: 0.1 }, { x: 806, y: 22, w: 90, h: 92, skew: -0.1 }, { x: 396, y: 276, w: 74, h: 58, skew: 0.08 }], reds: [[446, 0, 124, 104], [846, 140, 348, 244], [408, 134, 262, 186], [868, 0, 82, 16]] });
 
   if (mobile) hud(d, 210, 420, 0.8);
   else hud(d, 652, 208, 1);
@@ -98,14 +145,14 @@ export async function hero(mobile, save) {
   const pillSize = mobile ? 12 : 12.5;
   const pillW = pillText.length * monoW(pillSize) + 44;
   const pillY = mobile ? 28 : 32;
-  d.add(`<rect x="${x}" y="${pillY}" width="${n(pillW)}" height="30" rx="8" fill="${T.panel2}" stroke="${T.line}"/>`);
-  d.add(`<circle cx="${x + 17}" cy="${pillY + 15}" r="3.5" fill="${T.accent}"/>`);
-  d.add(ping(d, x + 17, pillY + 15, { r: 3.5, dur: 2.2 }));
+  d.add(`<rect x="${x}" y="${pillY}" width="${n(pillW)}" height="30" rx="8" fill="${T.panel2}" stroke="${acc(0.35)}"/>`);
+  d.add(`<circle cx="${x + 17}" cy="${pillY + 15}" r="3.5" fill="${T.red}"/>`);
+  d.add(ping(d, x + 17, pillY + 15, { r: 3.5, dur: 2.2, color: T.red }));
   d.text(pillText, x + 30, pillY + 19.5, { f: 'm4', size: pillSize, fill: T.muted });
 
-  d.def(`<linearGradient id="zg-name" x1="0" y1="0" x2="0" y2="1"><stop offset=".2" stop-color="#FFFFFF"/><stop offset="1" stop-color="${T.accent}"/></linearGradient>`);
+  d.def(`<linearGradient id="zg-name" x1="0" y1="0" x2="0" y2="1"><stop offset=".2" stop-color="#FFFFFF"/><stop offset="1" stop-color="${T.ice}"/></linearGradient>`);
   const size = mobile ? 100 : 128, nameY = mobile ? 148 : 182;
-  d.text('Zeno', x + 2, nameY + 4, { f: 'd7', size, fill: 'none', stroke: T.accent, sw: 1, op: 0.45, ls: -4 });
+  d.text('Zeno', x + 2, nameY + 4, { f: 'd7', size, fill: 'none', stroke: T.red, sw: 1.25, op: 0.85, ls: -4 });
   d.text('Zeno', x - 3, nameY, { f: 'd7', size, fill: 'url(#zg-name)', ls: -4 });
   d.text('Full-stack web + AI developer', x, mobile ? 188 : 226, { f: 'd5', size: mobile ? 24 : 27, fill: T.accent });
 
@@ -118,7 +165,7 @@ export async function hero(mobile, save) {
     let cx = x;
     ['Zana-G', 'Philippines · GMT+8'].forEach((c) => {
       const w = c.length * monoW(12) + 22;
-      d.add(`<rect x="${cx}" y="292" width="${n(w)}" height="26" rx="7" fill="none" stroke="${tan(0.4)}"/>`);
+      d.add(`<rect x="${cx}" y="292" width="${n(w)}" height="26" rx="7" fill="${T.bg}" stroke="${acc(0.45)}"/>`);
       d.text(c, cx + 11, 309, { f: 'm4', size: 12, fill: T.muted });
       cx += w + 8;
     });
@@ -126,10 +173,10 @@ export async function hero(mobile, save) {
 
   const base = H - 84;
   waves(d, [
-    { lambda: 230, amp: 9, y: base, dur: 17, fill: 0.04, stroke: 0.3 },
-    { lambda: 170, amp: 7, y: base + 18, dur: 12, fill: 0.06, stroke: 0.45, rev: true },
-    { lambda: 290, amp: 11, y: base + 36, dur: 21, fill: 0.1, stroke: 0.7 },
-    { lambda: 130, amp: 5, y: base + 54, dur: 9, fill: 0.12, stroke: 1, rev: true },
+    { lambda: 230, amp: 9, y: base, dur: 17, fill: 0.05, stroke: 0.35 },
+    { lambda: 170, amp: 7, y: base + 18, dur: 12, fill: 0.07, stroke: 0.5, rev: true },
+    { lambda: 290, amp: 11, y: base + 36, dur: 21, fill: 0.08, stroke: 0.85, color: T.red },
+    { lambda: 130, amp: 5, y: base + 54, dur: 9, fill: 0.14, stroke: 1, rev: true },
   ]);
   d.close();
   await save(d, mobile ? 'zg-hero-mobile.svg' : 'zg-hero.svg');
@@ -170,13 +217,13 @@ export async function bands(mobile, variant, save) {
     d.style(`@keyframes ${name}{from{transform:translateX(${rev ? -period : 0}px)}to{transform:translateX(${rev ? 0 : -period}px)}}`);
     let uses = '';
     for (let i = 0; i < copies; i++) uses += `<use href="#${id}" x="${n(i * x)}"/>`;
-    d.add(`<g transform="rotate(${ang} ${W / 2} ${n(y)})"><rect x="-140" y="${n(y - bh / 2)}" width="${W + 280}" height="${n(bh)}" fill="${bg}"${border ? ` stroke="${tan(0.4)}"` : ''}/><g transform="translate(-120 ${n(y + size * 0.35)})"><g style="animation:${name} ${dur}s linear infinite">${uses}</g></g></g>`);
+    d.add(`<g transform="rotate(${ang} ${W / 2} ${n(y)})"><rect x="-140" y="${n(y - bh / 2)}" width="${W + 280}" height="${n(bh)}" fill="${bg}"${border ? ` stroke="${acc(0.4)}"` : ''}/><g transform="translate(-120 ${n(y + size * 0.35)})"><g style="animation:${name} ${dur}s linear infinite">${uses}</g></g></g>`);
   };
 
   // The bands cross toward the left and open up to the right, so both stay readable.
   const mid = H / 2, ang = mobile ? 3 : 2;
   band(two, { y: mid + bh * 0.52, ang, bg: T.panel, fg: T.accent, outline: true, dur: 34, rev: true, border: true });
-  band(one, { y: mid - bh * 0.52, ang: -ang, bg: T.accent, fg: T.bg, dur: variant === 'b' ? 22 : 30 });
+  band(one, { y: mid - bh * 0.52, ang: -ang, bg: T.cta, fg: T.onCta, dur: variant === 'b' ? 22 : 30 });
   await save(d, `zg-band-${variant}${mobile ? '-mobile' : ''}.svg`);
 }
 
@@ -246,7 +293,7 @@ export async function reach(mobile, save) {
   const pad = mobile ? 18 : 28, gap = mobile ? 8 : 14, tw = (W - pad * 2 - gap * 2) / 3, th = mobile ? 92 : 88, ty = H - th - pad + 6;
   stats.forEach(([v, l], i) => {
     const x = pad + i * (tw + gap);
-    d.add(`<rect x="${n(x)}" y="${ty}" width="${n(tw)}" height="${th}" rx="12" fill="${T.panel2}" fill-opacity=".92" stroke="${tan(0.3)}"/>`);
+    d.add(`<rect x="${n(x)}" y="${ty}" width="${n(tw)}" height="${th}" rx="12" fill="${T.panel2}" fill-opacity=".92" stroke="${acc(0.3)}"/>`);
     d.text(v, x + 16, ty + (mobile ? 44 : 46), { f: 'd7', size: mobile ? 34 : 40, fill: T.accent });
     const lines = mobile ? wrap(l, 'b4', 12.5, tw - 28) : [l];
     lines.forEach((t, k) => d.text(t, x + 16, ty + (mobile ? 62 : 72) + k * 15, { f: 'b4', size: mobile ? 12.5 : 14, fill: T.muted }));
@@ -273,7 +320,7 @@ export async function anatomy(mobile, save) {
   d.panel();
   heading(d, 'Anatomy of a build', { x: mobile ? 18 : 28, ghost: 'LAYERS' });
 
-  d.def(`<linearGradient id="zg-pt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3A3129"/><stop offset="1" stop-color="#1C1814"/></linearGradient><linearGradient id="zg-beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.accent}" stop-opacity="0"/><stop offset=".5" stop-color="${T.accent}" stop-opacity=".6"/><stop offset="1" stop-color="${T.accent}" stop-opacity="0"/></linearGradient>`);
+  d.def(`<linearGradient id="zg-pt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22355C"/><stop offset="1" stop-color="#0E1730"/></linearGradient><linearGradient id="zg-beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.accent}" stop-opacity="0"/><stop offset=".5" stop-color="${T.accent}" stop-opacity=".6"/><stop offset="1" stop-color="${T.accent}" stop-opacity="0"/></linearGradient>`);
   const T_ = 7.5;
   d.style(`@keyframes zg-pf{0%,14%,100%{opacity:0}4%{opacity:1}}@keyframes zg-dn{from{stroke-dashoffset:125}to{stroke-dashoffset:0}}`);
 
@@ -288,10 +335,10 @@ export async function anatomy(mobile, save) {
     const cy = top + i * dy;
     d.style(`@keyframes zg-b${i}{0%,100%{transform:translateY(0)}50%{transform:translateY(${(i - 2) * 5}px)}}`);
     d.add(`<g style="animation:zg-b${i} 6s ease-in-out infinite">`);
-    d.add(`<path d="M${n(cx - a)} ${cy}L${cx} ${n(cy + b)}V${n(cy + b + t)}L${n(cx - a)} ${cy + t}Z" fill="#14110E" stroke="${tan(0.4)}"/>`);
-    d.add(`<path d="M${n(cx + a)} ${cy}L${cx} ${n(cy + b)}V${n(cy + b + t)}L${n(cx + a)} ${cy + t}Z" fill="#0E0C0A" stroke="${tan(0.4)}"/>`);
+    d.add(`<path d="M${n(cx - a)} ${cy}L${cx} ${n(cy + b)}V${n(cy + b + t)}L${n(cx - a)} ${cy + t}Z" fill="#0A1122" stroke="${acc(0.4)}"/>`);
+    d.add(`<path d="M${n(cx + a)} ${cy}L${cx} ${n(cy + b)}V${n(cy + b + t)}L${n(cx + a)} ${cy + t}Z" fill="#070C18" stroke="${acc(0.4)}"/>`);
     const top_ = `M${cx} ${n(cy - b)}L${n(cx + a)} ${cy}L${cx} ${n(cy + b)}L${n(cx - a)} ${cy}Z`;
-    d.add(`<path d="${top_}" fill="url(#zg-pt)" stroke="${tan(0.65)}"/>`);
+    d.add(`<path d="${top_}" fill="url(#zg-pt)" stroke="${acc(0.65)}"/>`);
     // Plate grid.
     let mesh = '';
     for (const k of [0.25, 0.5, 0.75]) {
@@ -299,7 +346,7 @@ export async function anatomy(mobile, save) {
       const C = [cx - a + k * a, cy + k * b], D = [cx + k * a, cy - b + k * b];
       mesh += `M${n(A[0])} ${n(A[1])}L${n(B[0])} ${n(B[1])}M${n(C[0])} ${n(C[1])}L${n(D[0])} ${n(D[1])}`;
     }
-    d.add(`<path d="${mesh}" stroke="${tan(0.12)}"/>`);
+    d.add(`<path d="${mesh}" stroke="${acc(0.12)}"/>`);
     d.add(`<path d="${top_}" fill="none" stroke="${SUN.hi}" stroke-width="2" style="opacity:0;animation:zg-pf ${T_}s linear ${n((i / 5) * T_ + 0.4)}s infinite"/>`);
 
     // Logos laid flat on the plate.
@@ -312,7 +359,7 @@ export async function anatomy(mobile, save) {
 
     // Leader line and label travel with the plate.
     const lx = mobile ? 234 : 470;
-    d.add(`<path d="M${n(cx + a)} ${cy}H${lx - 10}" stroke="${tan(0.45)}"/><circle cx="${n(cx + a)}" cy="${cy}" r="3" fill="${T.accent}"/><circle cx="${lx - 10}" cy="${cy}" r="2" fill="${T.accent}"/>`);
+    d.add(`<path d="M${n(cx + a)} ${cy}H${lx - 10}" stroke="${acc(0.45)}"/><circle cx="${n(cx + a)}" cy="${cy}" r="3" fill="${T.accent}"/><circle cx="${lx - 10}" cy="${cy}" r="2" fill="${T.accent}"/>`);
     d.text(name, lx, cy + (mobile ? 2 : 1), { f: 'd5', size: mobile ? 16 : 20, fill: T.text });
     wrap(tools, 'b4', mobile ? 13 : 15, W - lx - (mobile ? 14 : 28)).forEach((l, q) => d.text(l, lx, cy + (mobile ? 21 : 24) + q * (mobile ? 17 : 20), { f: 'b4', size: mobile ? 13 : 15, fill: T.muted }));
     d.add('</g>');
@@ -348,12 +395,12 @@ function flow(d, { nodes, wires, vertical, labelH = 36 }) {
       const x1 = A.x + h, x2 = B.x - h, m = (x2 - x1) / 2;
       dp = `M${x1} ${A.y}C${n(x1 + m)} ${A.y} ${n(x2 - m)} ${B.y} ${x2} ${B.y}`;
     }
-    d.add(`<path d="${dp}" fill="none" stroke="${tan(dashed ? 0.4 : 0.42)}" stroke-width="1.75"${dashed ? ' stroke-dasharray="4 5"' : ''}/>`);
+    d.add(`<path d="${dp}" fill="none" stroke="${acc(dashed ? 0.4 : 0.42)}" stroke-width="1.75"${dashed ? ' stroke-dasharray="4 5"' : ''}/>`);
     if (!dashed) d.add(`<path d="${dp}" pathLength="100" fill="none" stroke="${SUN.hi}" stroke-width="3" stroke-linecap="round" stroke-dasharray="30 200" stroke-dashoffset="30" style="animation:zg-wr ${T_}s linear ${n(order * 1.05)}s infinite"/>`);
   });
   nodes.forEach((N) => {
     const arrival = N.order === 0 ? 0 : N.order * 1.05;
-    d.add(`<rect x="${N.x - h}" y="${N.y - h}" width="${size}" height="${size}" rx="14" fill="${T.panel2}" stroke="${tan(0.4)}"/>`);
+    d.add(`<rect x="${N.x - h}" y="${N.y - h}" width="${size}" height="${size}" rx="14" fill="${T.panel2}" stroke="${acc(0.4)}"/>`);
     d.add(`<rect x="${N.x - h}" y="${N.y - h}" width="${size}" height="${size}" rx="14" fill="${T.accent}" fill-opacity=".12" stroke="${SUN.hi}" stroke-width="2" style="opacity:0;animation:zg-fl ${T_}s linear ${n(arrival)}s infinite"/>`);
     if (typeof N.icon === 'function') d.add(N.icon(N.x, N.y));
     else d.add(logo(N.icon, N.x, N.y, vertical ? 28 : 30, brand(N.icon)));
@@ -388,8 +435,8 @@ export async function flowAI(mobile, save) {
   const wires = mobile
     ? [['lead', 'agent', 0], ['agent', 'route', 1], ['route', 'crm', 2], ['route', 'draft', 2], ['route', 'alert', 2], ['draft', 'human', 3]]
     : [['lead', 'agent', 0], ['agent', 'route', 1], ['route', 'crm', 2], ['route', 'draft', 2], ['route', 'alert', 2], ['draft', 'human', 3]];
-  if (mobile) d.add(`<path d="M${pos.agent[0] + 29} ${pos.agent[1]}H${pos.tools[0] - 29}" stroke="${tan(0.45)}" stroke-width="1.75" stroke-dasharray="4 5"/>`);
-  else d.add(`<path d="M${pos.agent[0]} ${pos.agent[1] + 70}V${pos.tools[1] - 32}" stroke="${tan(0.45)}" stroke-width="1.75" stroke-dasharray="4 5"/>`);
+  if (mobile) d.add(`<path d="M${pos.agent[0] + 29} ${pos.agent[1]}H${pos.tools[0] - 29}" stroke="${acc(0.45)}" stroke-width="1.75" stroke-dasharray="4 5"/>`);
+  else d.add(`<path d="M${pos.agent[0]} ${pos.agent[1] + 70}V${pos.tools[1] - 32}" stroke="${acc(0.45)}" stroke-width="1.75" stroke-dasharray="4 5"/>`);
   flow(d, { nodes, wires, vertical: mobile });
   d.close();
   await save(d, mobile ? 'zg-flow-ai-mobile.svg' : 'zg-flow-ai.svg');
@@ -421,9 +468,9 @@ export async function flowTracking(mobile, save) {
 }
 
 /* ---------- RECENT WORK SCENES (box 405 x 170) ---------- */
-const frame = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#100E0C" stroke="${tan(0.4)}"/><path d="M${x} ${y + 17}H${x + w}" stroke="${tan(0.2)}"/>`
-  + [0, 1, 2].map((i) => `<circle cx="${x + 10 + i * 8}" cy="${y + 8.5}" r="2.2" fill="${tan(0.6)}"/>`).join('')
-  + `<rect x="${x + 38}" y="${y + 4.5}" width="${Math.min(w - 50, 90)}" height="8" rx="4" fill="${tan(0.14)}"/>`;
+const frame = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#070C18" stroke="${acc(0.4)}"/><path d="M${x} ${y + 17}H${x + w}" stroke="${acc(0.2)}"/>`
+  + [0, 1, 2].map((i) => `<circle cx="${x + 10 + i * 8}" cy="${y + 8.5}" r="2.2" fill="${acc(0.6)}"/>`).join('')
+  + `<rect x="${x + 38}" y="${y + 4.5}" width="${Math.min(w - 50, 90)}" height="8" rx="4" fill="${acc(0.14)}"/>`;
 const shirt = (x, y, s, c) => `<path transform="translate(${x} ${y}) scale(${s})" d="M13 5L4 10L8 18L12 15.5V36H28V15.5L32 18L36 10L27 5C25 9 15 9 13 5Z" fill="${c}"/>`;
 
 const SCENES = {
@@ -431,16 +478,16 @@ const SCENES = {
     const dur = 6, tiles = [32, 104, 176];
     let s = frame(18, 12, 236, 146);
     tiles.forEach((x, i) => {
-      s += `<rect x="${x}" y="38" width="64" height="62" rx="6" fill="${T.panel2}" stroke="${T.line}"/>${shirt(x + 12, 46, 1, [T.accent, SUN.mid, T.muted][i])}<rect x="${x + 6}" y="106" width="40" height="4" rx="2" fill="${tan(0.5)}"/>`;
+      s += `<rect x="${x}" y="38" width="64" height="62" rx="6" fill="${T.panel2}" stroke="${T.line}"/>${shirt(x + 12, 46, 1, [T.accent, SUN.mid, T.muted][i])}<rect x="${x + 6}" y="106" width="40" height="4" rx="2" fill="${acc(0.5)}"/>`;
       const key = `s-fly${i}`, tx = 330 - (x + 32), ty = 96 - 66;
       d.style(`@keyframes ${key}{0%,6%{transform:none;opacity:0}9%{opacity:1}30%{transform:translate(${tx}px,${ty}px) scale(.55);opacity:1}34%,100%{transform:translate(${tx}px,${ty}px) scale(.55);opacity:0}}`);
       s += `<g class="zg-c" style="opacity:0;animation:${key} ${dur}s cubic-bezier(.5,0,.4,1) ${i * 2}s infinite">${shirt(x + 12, 46, 1, [T.accent, SUN.mid, T.muted][i])}</g>`;
     });
-    s += `<rect x="32" y="120" width="208" height="26" rx="6" fill="${T.accent}"/>${d.t('Add bundle', 136, 137.5, { f: 'b5', size: 12.5, fill: T.bg, anchor: 'middle' })}`;
+    s += `<rect x="32" y="120" width="208" height="26" rx="6" fill="${T.cta}"/>${d.t('Add bundle', 136, 137.5, { f: 'b5', size: 12.5, fill: T.onCta, anchor: 'middle' })}`;
     s += `<path d="M294 66h72l8 84h-88z" fill="${T.panel2}" stroke="${T.accent}" stroke-width="1.75" stroke-linejoin="round"/><path d="M312 66v-10a18 18 0 0 1 36 0v10" fill="none" stroke="${T.accent}" stroke-width="1.75"/>`;
     d.style(`@keyframes s-dg{0%,33.3%{opacity:1}33.4%,100%{opacity:0}}`);
-    s += `<circle cx="370" cy="62" r="13" fill="${T.accent}"/>`;
-    [['1', 0.4, 0], ['2', -3.6, 0], ['3', -1.6, 1]].forEach(([t, delay, base]) => { s += d.t(t, 370, 66.5, { f: 'd7', size: 13, fill: T.bg, anchor: 'middle', style: `opacity:${base};animation:s-dg ${dur}s linear ${delay}s infinite` }); });
+    s += `<circle cx="370" cy="62" r="13" fill="${T.cta}"/>`;
+    [['1', 0.4, 0], ['2', -3.6, 0], ['3', -1.6, 1]].forEach(([t, delay, base]) => { s += d.t(t, 370, 66.5, { f: 'd7', size: 13, fill: T.onCta, anchor: 'middle', style: `opacity:${base};animation:s-dg ${dur}s linear ${delay}s infinite` }); });
     return s;
   },
   viewer(d) {
@@ -450,7 +497,7 @@ const SCENES = {
     const ang = -18.9;
     let s = '';
     // Orbit behind.
-    s += `<g transform="rotate(${ang} 205 84)"><ellipse cx="205" cy="84" rx="158" ry="46" fill="none" stroke="${tan(0.45)}" stroke-dasharray="3 6"/></g>`;
+    s += `<g transform="rotate(${ang} 205 84)"><ellipse cx="205" cy="84" rx="158" ry="46" fill="none" stroke="${acc(0.45)}" stroke-dasharray="3 6"/></g>`;
     s += `<path d="M62.4 131.3L65.6 140.7L345.6 41.6L344.4 38.4Z" fill="url(#zg-cue)"/>`;
     s += `<path d="M64 136L345 40" pathLength="100" stroke="#fff" stroke-opacity=".8" stroke-width="1.5" stroke-dasharray="25 100" style="animation:s-gl 3s linear infinite"/>`;
     [[92, 126], [116, 118], [140, 110]].forEach(([x, y], i) => {
@@ -458,20 +505,20 @@ const SCENES = {
     });
     // Drag handle travelling the orbit, with a cursor.
     s += `<g transform="rotate(${ang} 205 84)"><g class="zg-motion"><circle r="7" fill="${T.accent}" stroke="${T.bg}" stroke-width="2"/><path d="M4 4L15 13L9.5 13.6L12.5 19.5L9.8 20.8L7 15L3.5 18.5Z" fill="${T.text}"/><animateMotion dur="6s" repeatCount="indefinite" path="M47 84a158 46 0 1 0 316 0a158 46 0 1 0 -316 0"/></g></g>`;
-    s += `<rect x="16" y="14" width="56" height="26" rx="7" fill="${T.panel2}" stroke="${tan(0.5)}"/>${d.t('360°', 44, 32, { f: 'm5', size: 13, fill: T.accent, anchor: 'middle' })}`;
+    s += `<rect x="16" y="14" width="56" height="26" rx="7" fill="${T.panel2}" stroke="${acc(0.5)}"/>${d.t('360°', 44, 32, { f: 'm5', size: 13, fill: T.accent, anchor: 'middle' })}`;
     let ticks = '';
     for (let x = 0; x < 460; x += 20) ticks += `M${x} 160v${x % 100 === 0 ? -9 : -5}`;
-    s += `<g style="animation:s-tick 1.6s linear infinite"><path d="${ticks}" stroke="${tan(0.45)}"/></g>`;
+    s += `<g style="animation:s-tick 1.6s linear infinite"><path d="${ticks}" stroke="${acc(0.45)}"/></g>`;
     return s;
   },
   health(d) {
     d.style(`@keyframes s-ekg{from{stroke-dashoffset:135}to{stroke-dashoffset:0}}@keyframes s-ln{0%,4%{opacity:.15}12%,84%{opacity:1}100%{opacity:.15}}`);
     let s = frame(18, 12, 214, 146);
-    s += `<rect x="32" y="40" width="34" height="34" rx="9" fill="${T.accent}"/><path d="M45 47h8v6h6v8h-6v6h-8v-6h-6v-8h6z" fill="${T.bg}"/>`;
-    s += `<rect x="76" y="42" width="130" height="10" rx="3" fill="${T.text}"/><rect x="76" y="59" width="96" height="6" rx="3" fill="${tan(0.5)}"/><rect x="76" y="70" width="60" height="6" rx="3" fill="${tan(0.3)}"/>`;
+    s += `<rect x="32" y="40" width="34" height="34" rx="9" fill="${T.cta}"/><path d="M45 47h8v6h6v8h-6v6h-8v-6h-6v-8h6z" fill="${T.onCta}"/>`;
+    s += `<rect x="76" y="42" width="130" height="10" rx="3" fill="${T.text}"/><rect x="76" y="59" width="96" height="6" rx="3" fill="${acc(0.5)}"/><rect x="76" y="70" width="60" height="6" rx="3" fill="${acc(0.3)}"/>`;
     const p = 'M26 124H78L86 124L93 100L103 148L110 112L116 124H224';
-    s += `<path d="${p}" fill="none" stroke="${tan(0.28)}" stroke-width="1.5"/><path d="${p}" pathLength="100" fill="none" stroke="${SUN.hi}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="35 100" style="animation:s-ekg 2.8s linear infinite"/>`;
-    s += `<rect x="246" y="22" width="144" height="126" rx="8" fill="${T.panel2}" stroke="${tan(0.4)}"/>`;
+    s += `<path d="${p}" fill="none" stroke="${acc(0.28)}" stroke-width="1.5"/><path d="${p}" pathLength="100" fill="none" stroke="${SUN.hi}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="35 100" style="animation:s-ekg 2.8s linear infinite"/>`;
+    s += `<rect x="246" y="22" width="144" height="126" rx="8" fill="${T.panel2}" stroke="${acc(0.4)}"/>`;
     [['{', 0, T.muted], ['"@type":', 1, T.accent], ['"LocalBusiness",', 2, T.text], ['"areaServed":', 1, T.accent], ['"openingHours":', 1, T.accent], ['}', 0, T.muted]].forEach(([t, ind, c], i) => {
       s += d.t(t, 258 + ind * 10, 44 + i * 16, { f: 'm4', size: 11, fill: c, style: `animation:s-ln 7s linear ${n(i * 0.35)}s infinite` });
     });
@@ -480,53 +527,53 @@ const SCENES = {
   },
   law(d) {
     d.style(`@keyframes s-lk{from{stroke-dashoffset:125}to{stroke-dashoffset:0}}@keyframes s-sc{0%,18%{transform:none}45%,62%{transform:translateY(-62px)}90%,100%{transform:none}}`);
-    const card = (x, y, w, h, r) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${T.panel2}" stroke="${tan(0.4)}"/><circle cx="${x + w / 2}" cy="${y + h * 0.3}" r="${r}" fill="${T.accent}"/><path d="M${x + w / 2 - r * 1.7} ${y + h * 0.62}a${r * 1.7} ${r * 1.3} 0 0 1 ${r * 3.4} 0z" fill="${T.accent}"/><rect x="${x + w * 0.18}" y="${y + h * 0.72}" width="${w * 0.64}" height="${Math.max(4, h * 0.05)}" rx="2" fill="${T.text}"/><rect x="${x + w * 0.28}" y="${y + h * 0.84}" width="${w * 0.44}" height="${Math.max(3, h * 0.035)}" rx="2" fill="${tan(0.5)}"/>`;
+    const card = (x, y, w, h, r) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="7" fill="${T.panel2}" stroke="${acc(0.4)}"/><circle cx="${x + w / 2}" cy="${y + h * 0.3}" r="${r}" fill="${T.accent}"/><path d="M${x + w / 2 - r * 1.7} ${y + h * 0.62}a${r * 1.7} ${r * 1.3} 0 0 1 ${r * 3.4} 0z" fill="${T.accent}"/><rect x="${x + w * 0.18}" y="${y + h * 0.72}" width="${w * 0.64}" height="${Math.max(4, h * 0.05)}" rx="2" fill="${T.text}"/><rect x="${x + w * 0.28}" y="${y + h * 0.84}" width="${w * 0.44}" height="${Math.max(3, h * 0.035)}" rx="2" fill="${acc(0.5)}"/>`;
     let s = '';
     [18, 106, 194].forEach((x) => { s += card(x, 44, 76, 112, 12); });
     [['M56 44C56 10 144 10 144 44', 0], ['M144 44C144 10 232 10 232 44', 1.1], ['M56 44C56 -8 232 -8 232 44', 2.2]].forEach(([p, delay]) => {
-      s += `<path d="${p}" fill="none" stroke="${tan(0.4)}" stroke-dasharray="3 4"/><path d="${p}" pathLength="100" fill="none" stroke="${SUN.hi}" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="25 100" style="animation:s-lk 3.3s linear ${delay}s infinite"/>`;
+      s += `<path d="${p}" fill="none" stroke="${acc(0.4)}" stroke-dasharray="3 4"/><path d="${p}" pathLength="100" fill="none" stroke="${SUN.hi}" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="25 100" style="animation:s-lk 3.3s linear ${delay}s infinite"/>`;
     });
     d.def(`<clipPath id="zg-ph"><rect x="304" y="22" width="74" height="126" rx="4"/></clipPath>`);
-    s += `<rect x="298" y="8" width="86" height="154" rx="14" fill="#100E0C" stroke="${T.accent}" stroke-width="1.5"/><rect x="329" y="13" width="24" height="4" rx="2" fill="${tan(0.5)}"/>`;
+    s += `<rect x="298" y="8" width="86" height="154" rx="14" fill="#070C18" stroke="${T.accent}" stroke-width="1.5"/><rect x="329" y="13" width="24" height="4" rx="2" fill="${acc(0.5)}"/>`;
     s += `<g clip-path="url(#zg-ph)"><g style="animation:s-sc 6s ease-in-out infinite">${[26, 88, 150].map((y) => card(310, y, 62, 56, 7)).join('')}</g></g>`;
     return s;
   },
   crawl(d) {
     d.once('zg-tw', '@keyframes zg-tw{0%,100%{opacity:.15}50%{opacity:.9}}');
     d.style(`@keyframes s-bm{0%,100%{transform:none}50%{transform:translateY(74px)}}@keyframes s-eye{0%,88%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}@keyframes s-chip{0%,8%{opacity:.2}16%,86%{opacity:1}100%{opacity:.2}}`);
-    d.def(`<linearGradient id="zg-cone" x1="0" x2="1"><stop offset="0" stop-color="${SUN.hi}" stop-opacity=".42"/><stop offset="1" stop-color="${T.accent}" stop-opacity=".04"/></linearGradient><clipPath id="zg-dc"><rect x="178" y="16" width="112" height="138" rx="7"/></clipPath>`);
+    d.def(`<linearGradient id="zg-cone" x1="0" x2="1"><stop offset="0" stop-color="${T.ice}" stop-opacity=".42"/><stop offset="1" stop-color="${T.accent}" stop-opacity=".04"/></linearGradient><clipPath id="zg-dc"><rect x="178" y="16" width="112" height="138" rx="7"/></clipPath>`);
     let s = `<path d="M120 82L178 28V146Z" fill="url(#zg-cone)" style="animation:zg-tw 3.2s ease-in-out infinite"/>`;
     s += `<path d="M74 34V20" stroke="${T.accent}" stroke-width="2"/><circle cx="74" cy="16" r="4" fill="${T.accent}"/>${ping(d, 74, 16, { r: 4, dur: 2.4, grow: 3 })}`;
-    s += `<rect x="30" y="34" width="90" height="74" rx="20" fill="${T.panel2}" stroke="${T.accent}" stroke-width="1.75"/><rect x="42" y="52" width="66" height="30" rx="12" fill="#100E0C"/>`;
-    [60, 90].forEach((x) => { s += `<circle class="zg-c" cx="${x}" cy="67" r="6.5" fill="${SUN.hi}" style="animation:s-eye 4s linear infinite"/>`; });
-    s += `<rect x="62" y="92" width="26" height="4" rx="2" fill="${tan(0.6)}"/><rect x="50" y="112" width="50" height="26" rx="8" fill="${T.panel2}" stroke="${tan(0.5)}"/>`;
-    s += `<rect x="178" y="16" width="112" height="138" rx="7" fill="${T.panel2}" stroke="${tan(0.6)}"/>${d.t('llms.txt', 234, 37, { f: 'm5', size: 12, fill: T.accent, anchor: 'middle' })}`;
-    [78, 58, 72, 46, 66, 38].forEach((w, i) => { s += `<rect x="190" y="${50 + i * 15}" width="${w}" height="5" rx="2.5" fill="${tan(0.45)}"/>`; });
-    s += `<g clip-path="url(#zg-dc)"><g style="animation:s-bm 4.4s ease-in-out infinite"><rect x="178" y="46" width="112" height="16" fill="${T.accent}" fill-opacity=".22"/><path d="M178 62h112" stroke="${SUN.hi}" stroke-width="1.5"/></g></g>`;
+    s += `<rect x="30" y="34" width="90" height="74" rx="20" fill="${T.panel2}" stroke="${T.accent}" stroke-width="1.75"/><rect x="42" y="52" width="66" height="30" rx="12" fill="#070C18"/>`;
+    [60, 90].forEach((x) => { s += `<circle class="zg-c" cx="${x}" cy="67" r="6.5" fill="${T.ice}" style="animation:s-eye 4s linear infinite"/>`; });
+    s += `<rect x="62" y="92" width="26" height="4" rx="2" fill="${acc(0.6)}"/><rect x="50" y="112" width="50" height="26" rx="8" fill="${T.panel2}" stroke="${acc(0.5)}"/>`;
+    s += `<rect x="178" y="16" width="112" height="138" rx="7" fill="${T.panel2}" stroke="${acc(0.6)}"/>${d.t('llms.txt', 234, 37, { f: 'm5', size: 12, fill: T.accent, anchor: 'middle' })}`;
+    [78, 58, 72, 46, 66, 38].forEach((w, i) => { s += `<rect x="190" y="${50 + i * 15}" width="${w}" height="5" rx="2.5" fill="${acc(0.45)}"/>`; });
+    s += `<g clip-path="url(#zg-dc)"><g style="animation:s-bm 4.4s ease-in-out infinite"><rect x="178" y="46" width="112" height="16" fill="${T.accent}" fill-opacity=".22"/><path d="M178 62h112" stroke="${T.ice}" stroke-width="1.5"/></g></g>`;
     ['schema', 'sitemap', 'robots'].forEach((t, i) => {
       const y = 36 + i * 38;
-      s += `<g style="animation:s-chip 6s linear ${n(i * 0.8)}s infinite"><rect x="306" y="${y}" width="84" height="28" rx="8" fill="#100E0C" stroke="${tan(0.5)}"/>${d.t(t, 348, y + 18.5, { f: 'm5', size: 11.5, fill: T.text, anchor: 'middle' })}</g>`;
+      s += `<g style="animation:s-chip 6s linear ${n(i * 0.8)}s infinite"><rect x="306" y="${y}" width="84" height="28" rx="8" fill="#070C18" stroke="${acc(0.5)}"/>${d.t(t, 348, y + 18.5, { f: 'm5', size: 11.5, fill: T.text, anchor: 'middle' })}</g>`;
     });
     return s;
   },
   signal(d) {
     d.style(`@keyframes s-wr{0%{stroke-dashoffset:30}30%,100%{stroke-dashoffset:-100}}@keyframes s-gr{0%,10%{transform:scaleY(.15)}48%,86%{transform:scaleY(1)}100%{transform:scaleY(.15)}}`);
     const T_ = 5;
-    let s = `<rect x="24" y="8" width="88" height="154" rx="14" fill="#100E0C" stroke="${T.accent}" stroke-width="1.5"/><rect x="56" y="13" width="24" height="4" rx="2" fill="${tan(0.5)}"/>`;
-    s += `<rect x="34" y="26" width="68" height="10" rx="3" fill="${tan(0.3)}"/>`;
+    let s = `<rect x="24" y="8" width="88" height="154" rx="14" fill="#070C18" stroke="${T.accent}" stroke-width="1.5"/><rect x="56" y="13" width="24" height="4" rx="2" fill="${acc(0.5)}"/>`;
+    s += `<rect x="34" y="26" width="68" height="10" rx="3" fill="${acc(0.3)}"/>`;
     for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
       const on = r === 1 && c === 2;
       s += `<rect x="${34 + c * 17.5}" y="${42 + r * 17}" width="15" height="14" rx="3" fill="${on ? T.accent : T.panel2}"/>`;
     }
     s += ping(d, 76.5, 66, { r: 8, dur: T_, grow: 3 });
-    s += `<rect x="34" y="118" width="68" height="28" rx="7" fill="${T.accent}"/>${d.t('Book', 68, 137, { f: 'b5', size: 13, fill: T.bg, anchor: 'middle' })}`;
-    const wire = (p, delay) => `<path d="${p}" fill="none" stroke="${tan(0.4)}" stroke-width="1.5"/><path d="${p}" pathLength="100" fill="none" stroke="${SUN.hi}" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="30 200" stroke-dashoffset="30" style="animation:s-wr ${T_}s linear ${delay}s infinite"/>`;
+    s += `<rect x="34" y="118" width="68" height="28" rx="7" fill="${T.cta}"/>${d.t('Book', 68, 137, { f: 'b5', size: 13, fill: T.onCta, anchor: 'middle' })}`;
+    const wire = (p, delay) => `<path d="${p}" fill="none" stroke="${acc(0.4)}" stroke-width="1.5"/><path d="${p}" pathLength="100" fill="none" stroke="${SUN.hi}" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="30 200" stroke-dashoffset="30" style="animation:s-wr ${T_}s linear ${delay}s infinite"/>`;
     s += wire('M112 66C150 66 140 44 176 44', 0.2) + wire('M112 104C150 104 140 126 176 126', 0.2);
     [[si.siMeta, 44], [si.siGoogleanalytics, 126]].forEach(([ic, y]) => {
-      s += `<rect x="176" y="${y - 26}" width="52" height="52" rx="12" fill="${T.panel2}" stroke="${tan(0.5)}"/>${logo(ic, 202, y, 26, brand(ic))}`;
+      s += `<rect x="176" y="${y - 26}" width="52" height="52" rx="12" fill="${T.panel2}" stroke="${acc(0.5)}"/>${logo(ic, 202, y, 26, brand(ic))}`;
     });
     s += wire('M228 44C256 44 250 70 276 70', 1.7) + wire('M228 126C256 126 250 100 276 100', 1.7);
-    s += `<rect x="276" y="18" width="112" height="134" rx="10" fill="${T.panel2}" stroke="${tan(0.5)}"/>`;
+    s += `<rect x="276" y="18" width="112" height="134" rx="10" fill="${T.panel2}" stroke="${acc(0.5)}"/>`;
     [34, 52, 44, 72, 96].forEach((h, i) => { s += `<rect x="${288 + i * 18}" y="${140 - h}" width="13" height="${h}" rx="3" fill="${T.accent}" style="transform-box:fill-box;transform-origin:bottom;animation:s-gr ${T_}s ease-in-out ${n(i * 0.12)}s infinite"/>`; });
     return s;
   },
@@ -551,7 +598,7 @@ export async function work(mobile, save) {
   const d = new Doc(W, H, 'Recent work: ' + WORK.map((w) => w[2]).join('. ') + '. Opens the full case studies on zana-g.com.');
   d.panel();
   heading(d, 'Recent work', { hint: 'case studies', x: pad, ghost: 'WORK' });
-  d.def(`<linearGradient id="zg-sc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#231D17"/><stop offset="1" stop-color="#0B0A09"/></linearGradient>`);
+  d.def(`<linearGradient id="zg-sc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14233F"/><stop offset="1" stop-color="#060A14"/></linearGradient>`);
   WORK.forEach(([s, title, body], i) => {
     const col = i % cols, row = Math.floor(i / cols);
     const x = pad + col * (cw + gap), y = top + row * (ch + gap);
@@ -559,7 +606,7 @@ export async function work(mobile, save) {
     d.def(`<clipPath id="${clip}"><path d="M${n(x)} ${n(y + sh)}V${y + 12}a12 12 0 0 1 12 -12H${n(x + cw - 12)}a12 12 0 0 1 12 12V${n(y + sh)}Z"/></clipPath>`);
     d.add(`<rect x="${n(x)}" y="${y}" width="${n(cw)}" height="${ch}" rx="12" fill="${T.panel2}" stroke="${T.line}"/>`);
     d.add(`<g clip-path="url(#${clip})"><rect x="${n(x)}" y="${y}" width="${n(cw)}" height="${n(sh)}" fill="url(#zg-sc)"/><g transform="translate(${n(x)} ${y}) scale(${n(k)})">${SCENES[s](d)}</g></g>`);
-    d.add(`<path d="M${n(x)} ${n(y + sh)}H${n(x + cw)}" stroke="${tan(0.25)}"/>`);
+    d.add(`<path d="M${n(x)} ${n(y + sh)}H${n(x + cw)}" stroke="${acc(0.25)}"/>`);
     d.text(title, x + 16, y + sh + 29, { f: 'd5', size: 18, fill: T.text });
     wrap(body, 'b4', 14, cw - 32).forEach((l, q) => d.text(l, x + 16, y + sh + 51 + q * 19, { f: 'b4', size: 14, fill: T.muted }));
   });
@@ -572,7 +619,7 @@ export async function cmdChip(file, cmd, save) {
   const size = 13.5, h = 40;
   const w = Math.ceil(cmd.length * monoW(size) + 58);
   const d = new Doc(w, h, cmd);
-  d.add(`<rect x=".5" y=".5" width="${w - 1}" height="${h - 1}" rx="10" fill="${T.panel}" stroke="${tan(0.5)}"/>`);
+  d.add(`<rect x=".5" y=".5" width="${w - 1}" height="${h - 1}" rx="10" fill="${T.panel}" stroke="${acc(0.5)}"/>`);
   d.text(cmd, 14, 25, { f: 'm5', size, fill: T.accent });
   d.style('@keyframes zg-cv{0%,100%{transform:translateY(-2px)}50%{transform:translateY(2px)}}');
   d.add(`<path d="M${w - 25} ${h / 2 - 3}l5 5l5 -5" fill="none" stroke="${T.accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:zg-cv 1.6s ease-in-out infinite"/>`);
@@ -580,6 +627,30 @@ export async function cmdChip(file, cmd, save) {
 }
 
 /* ---------- CLOSING SUNSET ---------- */
+// City silhouette on the horizon, kept lower near the sun so the sun stays visible.
+function skyline(d, W, horizon, sx, sr, textEnd, textBottom) {
+  const rnd = seeded(31);
+  let blocks = '', lit = '', live = '';
+  for (let x = -6; x < W;) {
+    const w = 22 + Math.floor(rnd() * 30);
+    const away = Math.min(1, Math.abs(x + w / 2 - sx) / (sr * 1.7));
+    // Buildings under the text stop short of it.
+    const full = Math.round(16 + rnd() * 30 + away * (14 + rnd() * 56));
+    const h = x < textEnd ? Math.min(full, horizon - textBottom - 10) : full;
+    blocks += `M${x} ${horizon}V${horizon - h}H${x + w}V${horizon}Z`;
+    for (let wy = horizon - h + 6; wy < horizon - 5; wy += 8) {
+      for (let wx = x + 4; wx < x + w - 5; wx += 7) {
+        const roll = rnd();
+        if (roll > 0.97) live += `<rect x="${wx}" y="${wy}" width="3" height="3" fill="${T.ice}" style="animation:zg-tw ${n(2.5 + rnd() * 4)}s ease-in-out ${n(rnd() * 3)}s infinite"/>`;
+        else if (roll > 0.68) lit += `M${wx} ${wy}h3v3h-3z`;
+      }
+    }
+    x += w + (rnd() > 0.7 ? 3 : 0);
+  }
+  d.once('zg-tw', '@keyframes zg-tw{0%,100%{opacity:.15}50%{opacity:.9}}');
+  d.add(`<path d="${blocks}" fill="#050813" stroke="${acc(0.28)}"/><path d="${lit}" fill="${T.accent}" fill-opacity=".62"/>${live}`);
+}
+
 function palm(x, base, h, lean, scale = 1) {
   const tx = x + lean, ty = base - h;
   const trunk = `M${x - 7 * scale} ${base}Q${n(x + lean * 0.2)} ${n(base - h * 0.55)} ${n(tx - 2.5 * scale)} ${ty}L${n(tx + 2.5 * scale)} ${ty}Q${n(x + lean * 0.2 + 9 * scale)} ${n(base - h * 0.55)} ${x + 7 * scale} ${base}Z`;
@@ -595,17 +666,17 @@ function palm(x, base, h, lean, scale = 1) {
 }
 
 export async function contact(mobile, save) {
-  const W = mobile ? 420 : 880, H = mobile ? 584 : 470;
-  const horizon = mobile ? 396 : 300;
+  const W = mobile ? 420 : 880, H = mobile ? 584 : 506;
+  const horizon = mobile ? 396 : 340;
   const d = new Doc(W, H, 'Open to freelance, contract and agency roles. Building for the web, one solution at a time. Opens the contact section on zana-g.com.');
   d.panel({ fill: T.bg, decor: false });
-  d.def(`<linearGradient id="zg-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.bg}"/><stop offset=".62" stop-color="#2A170C"/><stop offset="1" stop-color="#6E3A1B"/></linearGradient>`);
+  d.def(`<linearGradient id="zg-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.bg}"/><stop offset=".6" stop-color="#1A0B2A"/><stop offset="1" stop-color="#6B1236"/></linearGradient>`);
   d.add(`<rect width="${W}" height="${horizon}" fill="url(#zg-sky)"/>`);
   stars(d, W, horizon - 90, mobile ? 40 : 70);
 
   // Sun with sliced lower half.
   const sx = mobile ? 210 : 640, sr = mobile ? 96 : 128, sy = horizon - sr * 0.62;
-  d.def(`<linearGradient id="zg-sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${SUN.hi}"/><stop offset=".55" stop-color="${SUN.mid}"/><stop offset="1" stop-color="${SUN.low}"/></linearGradient>`);
+  d.def(`<linearGradient id="zg-sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${SUN.top}"/><stop offset=".55" stop-color="${SUN.mid}"/><stop offset="1" stop-color="${SUN.low}"/></linearGradient>`);
   let bands_ = `<rect x="${sx - sr}" y="${n(sy - sr)}" width="${sr * 2}" height="${n(sr * 1.04)}"/>`;
   let yy = sy + sr * 0.08, gapH = 3, barH = sr * 0.15;
   while (yy < sy + sr) {
@@ -618,24 +689,26 @@ export async function contact(mobile, save) {
   d.style(`@keyframes zg-sb{0%,100%{transform:translateY(0)}50%{transform:translateY(10px)}}`);
   d.add(`<g style="animation:zg-sb 9s ease-in-out infinite"><circle cx="${sx}" cy="${n(sy)}" r="${sr}" fill="url(#zg-sun)" clip-path="url(#zg-sb)"/></g>`);
 
+  skyline(d, W, horizon, sx, sr, mobile ? 0 : 320, 264);
+
   // Palms, swaying gently.
   d.style('@keyframes zg-sw{0%,100%{transform:rotate(-1.3deg)}50%{transform:rotate(1.3deg)}}');
   const palms = mobile ? [palm(376, horizon + 8, 164, -22, 0.8)] : [palm(838, horizon + 10, 214, -34), palm(772, horizon + 10, 136, 22, 0.72)];
   palms.forEach((p, i) => {
-    d.add(`<g style="transform-origin:${p.base[0]}px ${p.base[1]}px;animation:zg-sw ${7 + i * 1.5}s ease-in-out infinite"><path d="${p.trunk}" fill="#080605"/><path d="${p.f}" fill="#080605"/></g>`);
+    d.add(`<g style="transform-origin:${p.base[0]}px ${p.base[1]}px;animation:zg-sw ${7 + i * 1.5}s ease-in-out infinite"><path d="${p.trunk}" fill="#03050B"/><path d="${p.f}" fill="#03050B"/></g>`);
   });
 
   // Digital sea: receding grid, plus the sun's shimmering reflection.
-  d.add(`<rect y="${horizon}" width="${W}" height="${H - horizon}" fill="#0C0907"/><path d="M0 ${horizon}H${W}" stroke="${SUN.mid}" stroke-opacity=".8"/>`);
+  d.add(`<rect y="${horizon}" width="${W}" height="${H - horizon}" fill="#050812"/><path d="M0 ${horizon}H${W}" stroke="${SUN.mid}" stroke-opacity=".8"/>`);
   const seaH = H - horizon, vp = mobile ? 210 : sx;
   let radial = '';
   for (let i = -16; i <= 16; i++) radial += `M${vp + i * 6} ${horizon}L${vp + i * (mobile ? 58 : 96)} ${H}`;
-  d.add(`<path d="${radial}" stroke="${tan(0.2)}"/>`);
+  d.add(`<path d="${radial}" stroke="${acc(0.2)}"/>`);
   const rows = 9;
   for (let i = 0; i < rows; i++) {
     const a = horizon + seaH * (i / rows) ** 2.1, b = horizon + seaH * ((i + 1) / rows) ** 2.1;
     d.style(`@keyframes zg-g${i}{from{transform:translateY(0)}to{transform:translateY(${n(b - a)}px)}}`);
-    d.add(`<path d="M0 ${n(a)}H${W}" stroke="${tan(n(0.12 + (i / rows) * 0.45))}" style="animation:zg-g${i} 2.6s linear infinite"/>`);
+    d.add(`<path d="M0 ${n(a)}H${W}" stroke="${acc(n(0.12 + (i / rows) * 0.45))}" style="animation:zg-g${i} 2.6s linear infinite"/>`);
   }
   d.style('@keyframes zg-sh{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.62)}}');
   for (let i = 0; i < 7; i++) {
@@ -651,9 +724,9 @@ export async function contact(mobile, save) {
   d.text('Building for the web, one solution at a time.', x, yy2 + (mobile ? 32 : 38), { f: 'b4', size: mobile ? 15.5 : 17, fill: T.muted });
   const label = 'Work with me';
   const bw = measure(label, 'b5', 15) + 60, by = yy2 + (mobile ? 50 : 58);
-  d.add(`<rect x="${x}" y="${by}" width="${n(bw)}" height="44" rx="10" fill="${T.accent}"/>`);
-  d.text(label, x + 20, by + 27.5, { f: 'b5', size: 15, fill: T.bg });
-  d.add(arrow(x + bw - 22, by + 22, T.bg, 4.5));
+  d.add(`<rect x="${x}" y="${by}" width="${n(bw)}" height="44" rx="10" fill="${T.cta}"/>`);
+  d.text(label, x + 20, by + 27.5, { f: 'b5', size: 15, fill: T.onCta });
+  d.add(arrow(x + bw - 22, by + 22, T.onCta, 4.5));
   d.close();
   await save(d, mobile ? 'zg-contact-mobile.svg' : 'zg-contact.svg');
 }
