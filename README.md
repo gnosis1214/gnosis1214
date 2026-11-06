@@ -128,7 +128,7 @@
 <p align="center">
   <picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-activity-mobile.svg">
-    <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 35 contributions in the last 12 months, 28 commits, 5 active days. Busiest week: 34 contributions, week of Nov 1. A surfer rides a wave across the contribution grid.">
+    <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 24 contributions in the last 12 months, 21 commits, 4 active days. Busiest week: 21 contributions, week of Nov 1. A surfer rides a wave across the contribution grid.">
   </picture>
 </p>
 
@@ -138,7 +138,8 @@
 | Week of | Contributions |
 | --- | --: |
 | Oct 4 | 1 |
-| Nov 1 | 34 |
+| Oct 25 | 2 |
+| Nov 1 | 21 |
 
 </details>
 <!-- zg-activity:end -->
