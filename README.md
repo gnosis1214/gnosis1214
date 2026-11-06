@@ -71,7 +71,7 @@
 <!-- zg-activity:start -->
 <picture>
   <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-activity-mobile.svg">
-  <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 34 contributions in the last 12 months, 27 commits, 4 active days. Busiest recent week: 33 contributions, week of Nov 1.">
+  <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 20 contributions in the last 12 months, 17 commits, 3 active days. Busiest recent week: 17 contributions, week of Nov 1.">
 </picture>
 
 <details>
@@ -80,7 +80,8 @@
 | Week of | Contributions |
 | --- | --: |
 | Oct 4 | 1 |
-| Nov 1 | 33 |
+| Oct 25 | 2 |
+| Nov 1 | 17 |
 
 </details>
 <!-- zg-activity:end -->
