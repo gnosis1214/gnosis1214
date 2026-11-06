@@ -567,35 +567,6 @@ export async function work(mobile, save) {
   await save(d, mobile ? 'zg-work-mobile.svg' : 'zg-work.svg');
 }
 
-/* ---------- PUBLIC CODE CARDS ---------- */
-export async function repoCard(mobile, file, name, desc, lang, langColor, save) {
-  const W = mobile ? 420 : 880, H = mobile ? 148 : 118;
-  const d = new Doc(W, H, `${name}: ${desc}`);
-  d.panel({ rx: 14 });
-  const x = mobile ? 18 : 26;
-  d.add(`<rect x="${x}" y="${mobile ? 18 : 26}" width="${mobile ? 44 : 66}" height="${mobile ? 44 : 66}" rx="${mobile ? 11 : 15}" fill="${T.bg}" stroke="${tan(0.4)}"/>`);
-  d.add(logo(si.siGithub, x + (mobile ? 22 : 33), (mobile ? 18 : 26) + (mobile ? 22 : 33), mobile ? 25 : 36, T.accent));
-  const tx = x + (mobile ? 58 : 84);
-  d.text(name, tx, mobile ? 36 : 50, { f: 'd5', size: mobile ? 17 : 19, fill: T.text });
-  // Language sits beside the name on desktop, so a two-line description has room.
-  const lgx = mobile ? tx : tx + measure(name, 'd5', 19) + 18, lgy = mobile ? 52 : 45;
-  d.add(`<circle cx="${n(lgx + 5)}" cy="${lgy}" r="5" fill="${langColor}"/>`);
-  d.text(lang, lgx + 15, lgy + 4.5, { f: 'm4', size: 12, fill: T.muted });
-  const maxW = mobile ? W - x * 2 : W - tx - 210;
-  wrap(desc, 'b4', 14, maxW).forEach((l, i) => d.text(l, mobile ? x : tx, (mobile ? 84 : 72) + i * 19, { f: 'b4', size: 14, fill: T.muted }));
-  if (!mobile) {
-    // Commit graph motif.
-    const y = 59, x0 = 680, x1 = 846;
-    d.style('@keyframes zg-cm{from{stroke-dashoffset:125}to{stroke-dashoffset:0}}');
-    d.add(`<path d="M${x0} ${y}H${x1}" stroke="${tan(0.4)}" stroke-width="2"/><path d="M${x0 + 34} ${y}C${x0 + 52} ${y} ${x0 + 48} ${y - 26} ${x0 + 66} ${y - 26}H${x0 + 104}C${x0 + 122} ${y - 26} ${x0 + 118} ${y} ${x0 + 136} ${y}" fill="none" stroke="${tan(0.5)}" stroke-width="2"/>`);
-    d.add(`<path d="M${x0} ${y}H${x1}" pathLength="100" stroke="${SUN.hi}" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="25 100" style="animation:zg-cm 4s linear infinite"/>`);
-    [[x0, y], [x0 + 34, y], [x0 + 85, y - 26], [x0 + 136, y], [x1, y]].forEach(([a, b]) => { d.add(`<circle cx="${a}" cy="${b}" r="5" fill="${T.panel}" stroke="${T.accent}" stroke-width="2"/>`); });
-  }
-  d.add(arrow(W - 20, 20, T.accent, 4));
-  d.close();
-  await save(d, file + (mobile ? '-mobile.svg' : '.svg'));
-}
-
 /* ---------- COMMAND CHIPS for click-to-expand sections ---------- */
 export async function cmdChip(file, cmd, save) {
   const size = 13.5, h = 40;

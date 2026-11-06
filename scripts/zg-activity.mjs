@@ -1,9 +1,12 @@
 // Regenerates the live activity card from real GitHub data, and syncs the README's
 // alt text and table to match. Run daily by .github/workflows/zg-refresh.yml.
-// Needs GITHUB_TOKEN. The Action's token sees what the public sees, which matches
-// the contribution graph shown on the profile.
+// Needs GITHUB_TOKEN. The Action's token sees what the public sees.
+//
+// GitHub always shows its own contribution grid on the profile, so this card must
+// never be a second grid. It charts weekly totals as a swell, and its figures are
+// ones GitHub's section does not show.
 import fs from 'node:fs';
-import { Doc, T, heading, README, n } from './zg-lib.mjs';
+import { Doc, T, heading, waves, README, n } from './zg-lib.mjs';
 
 const LOGIN = 'gnosis1214';
 const token = process.env.GITHUB_TOKEN;
@@ -12,7 +15,7 @@ if (!token) { console.error('GITHUB_TOKEN is not set'); process.exit(1); }
 const res = await fetch('https://api.github.com/graphql', {
   method: 'POST',
   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'zg-profile-activity' },
-  body: JSON.stringify({ query: `query($l:String!){user(login:$l){contributionsCollection{totalCommitContributions contributionCalendar{totalContributions weeks{contributionDays{date contributionCount contributionLevel}}}}}}`, variables: { l: LOGIN } }),
+  body: JSON.stringify({ query: `query($l:String!){user(login:$l){contributionsCollection{totalCommitContributions contributionCalendar{totalContributions weeks{contributionDays{date contributionCount}}}}}}`, variables: { l: LOGIN } }),
 });
 const json = await res.json();
 if (!res.ok || json.errors) { console.error('GitHub API error', res.status, JSON.stringify(json.errors || json)); process.exit(1); }
@@ -20,90 +23,137 @@ if (!res.ok || json.errors) { console.error('GitHub API error', res.status, JSON
 const coll = json.data.user.contributionsCollection;
 const cal = coll.contributionCalendar;
 const days = cal.weeks.flatMap((w) => w.contributionDays);
+const weekly = cal.weeks.map((w) => ({ start: w.contributionDays[0].date, count: w.contributionDays.reduce((a, x) => a + x.contributionCount, 0) }));
+const peak = weekly.reduce((a, w) => (w.count > a.count ? w : a), weekly[0]);
+
+let streak = 0, run = 0;
+for (const x of days) { run = x.contributionCount > 0 ? run + 1 : 0; if (run > streak) streak = run; }
 const stats = {
   total: cal.totalContributions,
   commits: coll.totalCommitContributions,
   activeDays: days.filter((x) => x.contributionCount > 0).length,
+  streak,
+  busiest: peak.count,
 };
-const weekly = cal.weeks.map((w) => ({ start: w.contributionDays[0].date, count: w.contributionDays.reduce((a, x) => a + x.contributionCount, 0) }));
-const peak = weekly.reduce((a, w) => (w.count > a.count ? w : a), weekly[0]);
 const label = (iso, opts = { month: 'short', day: 'numeric' }) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { ...opts, timeZone: 'UTC' });
 
-// One hue, dark to light: a sequential scale for magnitude.
-const LEVEL = { NONE: '#24201B', FIRST_QUARTILE: '#5A4A3A', SECOND_QUARTILE: '#8A7059', THIRD_QUARTILE: '#B0916F', FOURTH_QUARTILE: '#E8CDAE' };
+// Monotone cubic through the weekly points: smooth like a swell, but it never
+// overshoots, so the curve can't suggest a value the data doesn't have.
+function monotone(pts) {
+  const c = pts.length, dx = [], m = [], t = [];
+  for (let i = 0; i < c - 1; i++) { dx[i] = pts[i + 1][0] - pts[i][0]; m[i] = (pts[i + 1][1] - pts[i][1]) / dx[i]; }
+  t[0] = m[0]; t[c - 1] = m[c - 2];
+  for (let i = 1; i < c - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (3 * (dx[i - 1] + dx[i])) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]);
+  let d = '';
+  for (let i = 0; i < c - 1; i++) d += `C${n(pts[i][0] + dx[i] / 3)} ${n(pts[i][1] + (t[i] * dx[i]) / 3)} ${n(pts[i + 1][0] - dx[i] / 3)} ${n(pts[i + 1][1] - (t[i + 1] * dx[i]) / 3)} ${n(pts[i + 1][0])} ${n(pts[i + 1][1])}`;
+  const at = (x) => {
+    let i = 0;
+    while (i < c - 2 && x > pts[i + 1][0]) i++;
+    const h = dx[i], u = (x - pts[i][0]) / h;
+    const a = 2 * u ** 3 - 3 * u ** 2 + 1, b = u ** 3 - 2 * u ** 2 + u, e = -2 * u ** 3 + 3 * u ** 2, f = u ** 3 - u ** 2;
+    return a * pts[i][1] + b * h * t[i] + e * pts[i + 1][1] + f * h * t[i + 1];
+  };
+  return { d, at };
+}
 
-// A small surfer riding the swell that rolls across the grid.
-const SURFER = `<path d="M-15 -24Q0 -19 17 -30" fill="none" stroke="${T.accent}" stroke-width="3.6" stroke-linecap="round"/>`
+// A small surfer, standing at the origin, facing right.
+const SURFER = `<g transform="translate(0 25)"><path d="M-15 -24Q0 -19 17 -30" fill="none" stroke="${T.accent}" stroke-width="3.6" stroke-linecap="round"/>`
   + `<g fill="none" stroke="${T.text}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M-6 -24L-8 -33L-1 -38L6 -34L7 -27"/><path d="M-1 -38L4 -47"/><path d="M4 -47L-8 -47M4 -47L14 -42"/></g><circle cx="7" cy="-52" r="3.3" fill="${T.text}"/>`
-  + `<g fill="${T.accent}"><circle cx="-20" cy="-30" r="1.4" opacity=".8"/><circle cx="-25" cy="-25" r="1.1" opacity=".6"/><circle cx="-23" cy="-36" r="1" opacity=".45"/></g>`;
+  + `<g fill="${T.accent}"><circle cx="-20" cy="-30" r="1.4" opacity=".8"/><circle cx="-25" cy="-25" r="1.1" opacity=".6"/><circle cx="-23" cy="-36" r="1" opacity=".45"/></g></g>`;
 
 async function card(mobile) {
   const W = mobile ? 420 : 880, pad = mobile ? 18 : 28;
-  const weeks = cal.weeks.slice(mobile ? -26 : -53);
-  const pitch = (W - pad * 2) / weeks.length, cell = n(pitch - 2.5);
-  const gridTop = 234, gridH = pitch * 7, H = Math.ceil(gridTop + gridH + 74);
-  const d = new Doc(W, H, `Activity: ${stats.total} contributions in the last 12 months, ${stats.commits} commits, ${stats.activeDays} active days. A surfer rides a wave across the contribution grid.`);
+  const weeks = weekly.slice(mobile ? -9 : -12);
+  const tiles = [[stats.commits, 'Commits'], [stats.activeDays, 'Active days'], [stats.streak, 'Longest streak, days'], [stats.busiest, 'Busiest week']];
+  const cols = mobile ? 2 : 4, gap = mobile ? 8 : 14, tw = (W - pad * 2 - gap * (cols - 1)) / cols, th = mobile ? 72 : 80, ty = mobile ? 70 : 88;
+  const tileRows = Math.ceil(tiles.length / cols);
+  const tilesEnd = ty + tileRows * th + (tileRows - 1) * gap;
+  const titleY = tilesEnd + 28, top = titleY + 34, base = top + (mobile ? 118 : 150), H = base + 82;
+
+  const d = new Doc(W, H, `Activity: ${stats.commits} commits, ${stats.activeDays} active days, longest streak ${stats.streak} days, busiest week ${stats.busiest} contributions. A surfer rides a swell charting contributions per week.`);
   d.panel();
   heading(d, 'Activity', { x: pad, ghost: 'LIVE' });
   if (!mobile) d.text('refreshed daily by GitHub Actions', W - pad, 76, { f: 'm4', size: 12, fill: T.faint, anchor: 'end' });
 
-  // Stat tiles: the numbers are the headline.
-  const tiles = [[stats.total, 'Contributions, 12 months'], [stats.commits, 'Commits'], [stats.activeDays, 'Active days']];
-  const gap = mobile ? 8 : 14, tw = (W - pad * 2 - gap * 2) / 3, ty = 88, th = mobile ? 92 : 80;
   tiles.forEach(([v, l], i) => {
-    const x = pad + i * (tw + gap);
-    d.add(`<rect x="${n(x)}" y="${ty}" width="${n(tw)}" height="${th}" rx="12" fill="${T.panel2}" stroke="${T.line}"/>`);
-    d.text(String(v), x + 16, ty + 38, { f: 'd7', size: 30, fill: T.accent });
-    if (mobile) {
-      const words = l === 'Contributions, 12 months' ? ['Contributions,', '12 months'] : [l];
-      words.forEach((w, k) => d.text(w, x + 16, ty + 60 + k * 15, { f: 'b4', size: 12, fill: T.muted }));
-    } else d.text(l, x + 16, ty + 62, { f: 'b4', size: 13, fill: T.muted });
+    const x = pad + (i % cols) * (tw + gap), y = ty + Math.floor(i / cols) * (th + gap);
+    d.add(`<rect x="${n(x)}" y="${y}" width="${n(tw)}" height="${th}" rx="12" fill="${T.panel2}" stroke="${T.line}"/>`);
+    d.text(String(v), x + 16, y + (mobile ? 34 : 38), { f: 'd7', size: mobile ? 26 : 30, fill: T.accent });
+    d.text(l, x + 16, y + (mobile ? 55 : 62), { f: 'b4', size: mobile ? 12.5 : 13, fill: T.muted });
   });
 
-  // Grid. Each week is a column that lifts as the swell passes.
-  const period = 12, cross = 7, dt = cross / weeks.length;
-  const lift = 0.07 * period;
-  d.style(`@keyframes zg-rp{0%,14%,100%{transform:translateY(0)}7%{transform:translateY(-9px)}}`);
-  weeks.forEach((w, c) => {
-    const x = pad + c * pitch;
-    let col = `<g style="animation:zg-rp ${period}s ease-in-out ${n(c * dt)}s infinite">`;
-    w.contributionDays.forEach((day) => {
-      const r = new Date(`${day.date}T00:00:00Z`).getUTCDay();
-      col += `<rect x="${n(x)}" y="${n(gridTop + r * pitch)}" width="${cell}" height="${cell}" rx="2.5" fill="${LEVEL[day.contributionLevel] || LEVEL.NONE}"/>`;
-    });
-    d.add(col + '</g>');
-  });
+  d.text(`Contributions per week, last ${weeks.length} weeks`, pad, titleY, { f: 'm4', size: 12, fill: T.muted });
 
-  // Swell and surfer, timed to the column lift.
-  const x0 = pad + cell / 2, x1 = pad + (weeks.length - 1) * pitch + cell / 2;
-  const endPct = n((cross / period) * 100);
-  d.style(`@keyframes zg-sf{0%{transform:translateX(${n(x0)}px);opacity:0}2%{opacity:1}${n(endPct - 2)}%{opacity:1}${endPct}%,100%{transform:translateX(${n(x1)}px);opacity:0}}@keyframes zg-bb{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-3px) rotate(3deg)}}`);
-  const parked = n(x0 + (x1 - x0) * 0.62);
-  d.add(`<g transform="translate(0 ${gridTop - 3})"><g style="transform:translateX(${parked}px);animation:zg-sf ${period}s linear ${n(lift)}s infinite backwards">`
-    + `<path d="M-84 0C-50 0 -34 -24 0 -24C34 -24 50 0 84 0Z" fill="${T.accent}" fill-opacity=".13"/><path d="M-84 0C-50 0 -34 -24 0 -24C34 -24 50 0 84 0" fill="none" stroke="${T.accent}" stroke-width="1.5"/>`
-    + `<g style="animation:zg-bb 1.3s ease-in-out infinite">${SURFER}</g></g></g>`);
+  // One series, one colour. Height is proportional to that week's count, from the sea line.
+  const pitch = (W - pad * 2) / (weeks.length - 1);
+  const max = Math.max(1, ...weeks.map((w) => w.count));
+  const pts = weeks.map((w, i) => [pad + i * pitch, base - (w.count / max) * (base - top)]);
+  const curve = monotone(pts);
+  const first = pts[0], last = pts[pts.length - 1];
+  const line = `M0 ${n(first[1])}L${n(first[0])} ${n(first[1])}${curve.d}L${W} ${n(last[1])}`;
+  const peakIdx = weeks.reduce((best, w, i) => (w.count > weeks[best].count ? i : best), 0);
 
-  // Month labels, thinned out so they never collide.
-  let lastX = -99;
-  let lastMonth = '';
-  weeks.forEach((w, c) => {
-    const month = label(w.contributionDays[0].date, { month: 'short' });
-    const x = pad + c * pitch;
-    if (month !== lastMonth && x - lastX > (mobile ? 42 : 34) && c < weeks.length - 1) {
-      d.text(month, x, gridTop + gridH + 16, { f: 'm4', size: 11.5, fill: T.faint });
+  // Night sky and a warm glow behind the crest. Decoration only, drawn behind the data.
+  d.def(`<linearGradient id="zg-sw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.accent}" stop-opacity=".42"/><stop offset="1" stop-color="${T.accent}" stop-opacity=".05"/></linearGradient><radialGradient id="zg-cr"><stop offset="0" stop-color="#E9A96B" stop-opacity=".34"/><stop offset="1" stop-color="#E9A96B" stop-opacity="0"/></radialGradient>`);
+  d.add(`<circle cx="${n(pts[peakIdx][0])}" cy="${n(pts[peakIdx][1])}" r="${mobile ? 130 : 210}" fill="url(#zg-cr)"/>`);
+  let seed = 23;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  d.once('zg-tw', '@keyframes zg-tw{0%,100%{opacity:.15}50%{opacity:.9}}');
+  for (let i = 0; i < (mobile ? 24 : 46); i++) {
+    const sx = n(pad + rnd() * (W - pad * 2)), sy = n(titleY + 12 + rnd() * (base - titleY - 40)), sr = n(0.5 + rnd() * 0.8);
+    const live = i % 4 === 0 ? ` style="animation:zg-tw ${n(2.5 + rnd() * 4)}s ease-in-out ${n(rnd() * 3)}s infinite"` : ' opacity=".35"';
+    d.add(`<circle cx="${sx}" cy="${sy}" r="${sr}" fill="${T.text}"${live}/>`);
+  }
+
+  // Swell with contour echoes beneath it. Only the top line carries the data.
+  d.add(`<path d="${line}L${W} ${base}L0 ${base}Z" fill="url(#zg-sw)"/>`);
+  d.def(`<clipPath id="zg-und"><path d="${line}L${W} ${base}L0 ${base}Z"/></clipPath>`);
+  d.add(`<g clip-path="url(#zg-und)" fill="none" stroke="${T.accent}">${[[9, 0.3], [18, 0.2], [28, 0.12], [40, 0.07]].map(([o, a]) => `<path d="${line}" transform="translate(0 ${o})" stroke-opacity="${a}"/>`).join('')}</g>`);
+  d.add(`<path d="${line}" fill="none" stroke="${T.accent}" stroke-width="2" stroke-linejoin="round"/>`);
+
+  // Only the busiest week gets a number, placed on whichever side has room.
+  if (weeks[peakIdx].count > 0) {
+    const [px, py] = pts[peakIdx];
+    const onRight = px < W / 2;
+    d.add(`<circle cx="${n(px)}" cy="${n(py)}" r="4.5" fill="${T.accent}" stroke="${T.panel}" stroke-width="2"/>`);
+    d.text(String(weeks[peakIdx].count), px + (onRight ? 12 : -12), py + 5, { f: 'm5', size: 13, fill: T.text, anchor: onRight ? 'start' : 'end' });
+  }
+
+  // The sea itself is decoration and sits below the chart's zero line.
+  waves(d, [
+    { lambda: 230, amp: 6, y: base + 12, dur: 17, fill: 0.04, stroke: 0.3 },
+    { lambda: 170, amp: 5, y: base + 28, dur: 12, fill: 0.06, stroke: 0.45, rev: true },
+    { lambda: 290, amp: 7, y: base + 46, dur: 21, fill: 0.1, stroke: 0.7 },
+    { lambda: 130, amp: 4, y: base + 62, dur: 9, fill: 0.12, stroke: 1, rev: true },
+  ]);
+
+  // Sparse month labels on the sea line, kept clear of "This week".
+  let lastX = -99, lastMonth = '';
+  weeks.forEach((w, i) => {
+    const month = label(w.start, { month: 'short' });
+    const x = pts[i][0];
+    if (month !== lastMonth && x - lastX > 44 && x < W - pad - 96) {
+      d.text(month, x, base + 19, { f: 'm4', size: 11.5, fill: T.muted, anchor: 'middle' });
       lastX = x;
     }
     lastMonth = month;
   });
+  d.text('This week', W - pad, base + 19, { f: 'm4', size: 11.5, fill: T.muted, anchor: 'end' });
 
-  // Caption and scale legend.
-  const ly = gridTop + gridH + 42;
-  d.text(mobile ? 'Last 26 weeks' : 'Contributions, last 12 months', pad, ly, { f: 'm4', size: 12, fill: T.muted });
-  const levels = Object.values(LEVEL);
-  const lx = W - pad - 28 - levels.length * 15;
-  d.text('Less', lx - 8, ly, { f: 'm4', size: 11.5, fill: T.faint, anchor: 'end' });
-  levels.forEach((c, i) => d.add(`<rect x="${lx + i * 15}" y="${ly - 10}" width="12" height="12" rx="2.5" fill="${c}"/>`));
-  d.text('More', W - pad, ly, { f: 'm4', size: 11.5, fill: T.faint, anchor: 'end' });
+  // The surfer follows the real curve. The tilt is capped so a steep week still reads as riding.
+  const period = 14, travel = 0.68, N = 44;
+  const x0 = first[0], x1 = last[0];
+  const pose = (x) => {
+    const slope = (curve.at(Math.min(x + 3, x1)) - curve.at(Math.max(x - 3, x0))) / 6;
+    const ang = Math.max(-30, Math.min(30, (Math.atan(slope) * 180) / Math.PI));
+    return `translate(${n(x)}px,${n(curve.at(x))}px) rotate(${n(ang)}deg)`;
+  };
+  let frames = '';
+  for (let i = 0; i <= N; i++) frames += `${n((i / N) * travel * 100)}%{transform:${pose(x0 + ((x1 - x0) * i) / N)}}`;
+  const endPct = n(travel * 100);
+  d.style(`@keyframes zg-rd{${frames}100%{transform:${pose(x1)}}}@keyframes zg-rf{0%{opacity:0}2%{opacity:1}${n(endPct - 2)}%{opacity:1}${endPct}%,100%{opacity:0}}@keyframes zg-bb{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-2px) rotate(2deg)}}`);
+  d.add(`<g style="animation:zg-rf ${period}s linear infinite"><g style="transform:${pose(x0 + (x1 - x0) * 0.55)};animation:zg-rd ${period}s linear infinite"><g style="animation:zg-bb 1.4s ease-in-out infinite">${SURFER}</g></g></g>`);
+
   d.close();
   await d.write(mobile ? 'zg-activity-mobile.svg' : 'zg-activity.svg');
 }
@@ -113,7 +163,7 @@ await card(true);
 
 // Keep the README's text version in step with the card.
 if (fs.existsSync(README)) {
-  const alt = `Activity: ${stats.total} contributions in the last 12 months, ${stats.commits} commits, ${stats.activeDays} active days. Busiest week: ${peak.count} contributions, week of ${label(peak.start)}. A surfer rides a wave across the contribution grid.`;
+  const alt = `Activity: ${stats.commits} commits, ${stats.activeDays} active days, longest streak ${stats.streak} days. Busiest week: ${peak.count} contributions, week of ${label(peak.start)}. A surfer rides a swell charting contributions per week.`;
   const rows = weekly.filter((w) => w.count > 0).map((w) => `| ${label(w.start)} | ${w.count} |`).join('\n') || '| No activity yet | 0 |';
   const block = `<!-- zg-activity:start -->
 <p align="center">
@@ -136,4 +186,4 @@ ${rows}
   const after = before.replace(/<!-- zg-activity:start -->[\s\S]*?<!-- zg-activity:end -->/, () => block);
   if (after !== before) fs.writeFileSync(README, after);
 }
-console.log(`Activity card written: ${JSON.stringify(stats)}, peak ${peak.count}`);
+console.log(`Activity card written: ${JSON.stringify(stats)}`);

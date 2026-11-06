@@ -1,7 +1,7 @@
 // Generates every static graphic in assets/. Run: npm run build
 import * as si from 'simple-icons';
 import { Doc, T, heading, ping, wrap, measure, monoW, arrow, logo, brand, n } from './zg-lib.mjs';
-import { hero, bands, reach, anatomy, flowAI, flowTracking, work, repoCard, cmdChip, contact } from './zg-scenes.mjs';
+import { hero, bands, reach, anatomy, flowAI, flowTracking, work, cmdChip, contact } from './zg-scenes.mjs';
 
 const sizes = {};
 const save = async (d, name) => { sizes[name] = await d.write(name); };
@@ -368,8 +368,6 @@ for (const m of [false, true]) {
   await flowAI(m, save);
   await flowTracking(m, save);
   await work(m, save);
-  await repoCard(m, 'zg-repo-portfolio', 'gnosis1214/portfolio', 'Portfolio site of Zeno, full-stack web + AI developer (WordPress, Shopify, Next.js, n8n, MCP)', 'HTML', '#E34C26', save);
-  await repoCard(m, 'zg-repo-profile', 'gnosis1214/gnosis1214', 'This profile. Animated SVGs generated with Node and refreshed daily by GitHub Actions.', 'JavaScript', '#F1E05A', save);
   await processGraph(m);
   await contact(m, save);
 }

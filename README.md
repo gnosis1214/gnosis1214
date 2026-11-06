@@ -104,20 +104,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gnosis1214/portfolio"><picture>
-    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-repo-portfolio-mobile.svg">
-    <img src="./assets/zg-repo-portfolio.svg" width="100%" alt="Public repo gnosis1214/portfolio: portfolio site of Zeno, full-stack web + AI developer. HTML.">
-  </picture></a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/gnosis1214/gnosis1214"><picture>
-    <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-repo-profile-mobile.svg">
-    <img src="./assets/zg-repo-profile.svg" width="100%" alt="Public repo gnosis1214/gnosis1214: this profile. Animated SVGs generated with Node and refreshed daily by GitHub Actions. JavaScript.">
-  </picture></a>
-</p>
-
-<p align="center">
   <picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-process-mobile.svg">
     <img src="./assets/zg-process.svg" width="100%" alt="How I work, drawn as a Git graph: scope, define done, ship early, polish, staging, then merge to live. Scope and a clear definition of done first. Ship a working version early, then polish. Staging before live, everything in Git.">
@@ -128,7 +114,7 @@
 <p align="center">
   <picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-activity-mobile.svg">
-    <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 24 contributions in the last 12 months, 21 commits, 4 active days. Busiest week: 21 contributions, week of Nov 1. A surfer rides a wave across the contribution grid.">
+    <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 32 commits, 5 active days, longest streak 2 days. Busiest week: 38 contributions, week of Nov 1. A surfer rides a swell charting contributions per week.">
   </picture>
 </p>
 
@@ -138,8 +124,7 @@
 | Week of | Contributions |
 | --- | --: |
 | Oct 4 | 1 |
-| Oct 25 | 2 |
-| Nov 1 | 21 |
+| Nov 1 | 38 |
 
 </details>
 <!-- zg-activity:end -->
