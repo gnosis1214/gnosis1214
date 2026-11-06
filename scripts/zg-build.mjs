@@ -378,9 +378,9 @@ await button('zg-btn-cases.svg', 'Case studies', { icon: icCase });
 await button('zg-btn-site.svg', 'zana-g.com', { icon: icGlobe });
 await button('zg-btn-linkedin.svg', 'LinkedIn', { icon: icIn });
 await button('zg-btn-code.svg', 'Portfolio code', { icon: icGit });
-await cmdChip('zg-cmd-toolbox.svg', '$ zeno --toolbox', 'List every tool as text', save);
-await cmdChip('zg-cmd-table.svg', '$ zeno --activity --table', 'See the numbers', save);
-await cmdChip('zg-cmd-plain.svg', '$ zeno --plain-text', 'This profile without graphics', save);
+await cmdChip('zg-cmd-toolbox.svg', '$ zeno --toolbox', save);
+await cmdChip('zg-cmd-table.svg', '$ zeno --activity --table', save);
+await cmdChip('zg-cmd-plain.svg', '$ zeno --plain-text', save);
 
 for (const [k, v] of Object.entries(sizes)) console.log(k.padEnd(32), `${(v / 1024).toFixed(1)} KB`);
 console.log('Total'.padEnd(32), `${(Object.values(sizes).reduce((a, b) => a + b, 0) / 1024).toFixed(0)} KB`);

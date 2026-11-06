@@ -208,7 +208,7 @@ function dottedMap({ w, ox, oy, step }) {
 }
 
 export async function reach(mobile, save) {
-  const W = mobile ? 420 : 880, H = mobile ? 548 : 520;
+  const W = mobile ? 420 : 880, H = mobile ? 506 : 520;
   const d = new Doc(W, H, 'Map connecting the Philippines to clients in the United States, United Kingdom, Germany, Singapore and Australia. 5 client countries, 14 client projects, 30+ tools.');
   d.panel({ fill: T.bg, decor: false });
   const map = mobile ? { w: 540, ox: -62, oy: 118, step: 7 } : { w: 880, ox: 0, oy: 66, step: 8 };
@@ -597,14 +597,12 @@ export async function repoCard(mobile, file, name, desc, lang, langColor, save) 
 }
 
 /* ---------- COMMAND CHIPS for click-to-expand sections ---------- */
-export async function cmdChip(file, cmd, hint, save) {
+export async function cmdChip(file, cmd, save) {
   const size = 13.5, h = 40;
-  const w = Math.ceil(cmd.length * monoW(size) + measure(hint, 'b4', 13) + 76);
-  const d = new Doc(w, h, `${cmd}: ${hint}`);
+  const w = Math.ceil(cmd.length * monoW(size) + 58);
+  const d = new Doc(w, h, cmd);
   d.add(`<rect x=".5" y=".5" width="${w - 1}" height="${h - 1}" rx="10" fill="${T.panel}" stroke="${tan(0.5)}"/>`);
   d.text(cmd, 14, 25, { f: 'm5', size, fill: T.accent });
-  const hx = 14 + cmd.length * monoW(size) + 14;
-  d.text(hint, hx, 25, { f: 'b4', size: 13, fill: T.muted });
   d.style('@keyframes zg-cv{0%,100%{transform:translateY(-2px)}50%{transform:translateY(2px)}}');
   d.add(`<path d="M${w - 25} ${h / 2 - 3}l5 5l5 -5" fill="none" stroke="${T.accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:zg-cv 1.6s ease-in-out infinite"/>`);
   await save(d, file);

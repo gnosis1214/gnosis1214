@@ -64,7 +64,7 @@
 <details>
 <summary><picture><img src="./assets/zg-cmd-toolbox.svg" height="40" alt="$ zeno --toolbox. Click to list every tool as text."></picture></summary>
 
-| | |
+| Area | Tools |
 | --- | --- |
 | **Platforms** | WordPress + Elementor, Gutenberg, WooCommerce, Shopify (Liquid, theme dev, Shopify apps), GoHighLevel, Squarespace, Wix, Flatsome, Astra |
 | **Full stack** | React, Next.js, TypeScript/JavaScript, HTML, CSS, Tailwind, PHP, Liquid, REST/GraphQL APIs, Node |
@@ -162,7 +162,7 @@
 
 #### What I build
 
-| | |
+| Area | What I build |
 | --- | --- |
 | **WordPress & Elementor** | Full site builds, custom themes and plugins, WooCommerce, mobile and speed fixes |
 | **Shopify** | Theme development, custom Liquid sections, bundles, print-on-demand, interactive 3D/360° product viewers |
