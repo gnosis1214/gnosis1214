@@ -36,7 +36,7 @@
 <p align="center">
   <picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-reach-mobile.svg">
-    <img src="./assets/zg-reach.svg" width="100%" alt="Remote, worldwide. Animated map connecting the Philippines to clients in the United States, United Kingdom, Germany, Singapore and Australia. 5 client countries, 14 client projects, 30+ tools in the kit.">
+    <img src="./assets/zg-reach.svg" width="100%" alt="Remote, worldwide. Animated map connecting the Philippines to clients in the United States, Canada, London (United Kingdom), Germany, Russia, the United Arab Emirates, Singapore, Australia and New Zealand. 9 client countries, 40+ client projects, 30+ tools in the kit.">
   </picture>
 </p>
 

@@ -231,10 +231,14 @@ export async function bands(mobile, variant, save) {
 const PH = [122, 13];
 const MARKETS = [
   { id: 'US', name: 'United States', ll: [-100, 39], dx: -9, dy: -8, anchor: 'end' },
-  { id: 'UK', name: 'United Kingdom', ll: [-1.5, 52.5], dx: -9, dy: -8, anchor: 'end' },
+  { id: 'CA', name: 'Canada', ll: [-106, 57], dx: -9, dy: -8, anchor: 'end' },
+  { id: 'UK', name: 'London, UK', ll: [-0.13, 51.5], dx: -9, dy: -8, anchor: 'end' },
   { id: 'DE', name: 'Germany', ll: [10.5, 51], dx: 8, dy: -9 },
+  { id: 'RU', name: 'Russia', ll: [96, 62], dx: 9, dy: -8 },
+  { id: 'UAE', name: 'UAE', ll: [54.4, 24.4], dx: -9, dy: 4, anchor: 'end' },
   { id: 'SG', name: 'Singapore', ll: [103.8, 1.35], dx: -9, dy: 16, anchor: 'end' },
   { id: 'AU', name: 'Australia', ll: [145, -30], dx: 9, dy: 13 },
+  { id: 'NZ', name: 'New Zealand', ll: [174, -41], dx: 9, dy: 13 },
 ];
 
 function dottedMap({ w, ox, oy, step }) {
@@ -255,8 +259,8 @@ function dottedMap({ w, ox, oy, step }) {
 }
 
 export async function reach(mobile, save) {
-  const W = mobile ? 420 : 880, H = mobile ? 506 : 520;
-  const d = new Doc(W, H, 'Map connecting the Philippines to clients in the United States, United Kingdom, Germany, Singapore and Australia. 5 client countries, 14 client projects, 30+ tools.');
+  const W = mobile ? 420 : 880, H = mobile ? 506 : 556;
+  const d = new Doc(W, H, 'Map connecting the Philippines to clients in the United States, Canada, London (United Kingdom), Germany, Russia, the United Arab Emirates, Singapore, Australia and New Zealand. 9 client countries, 40+ client projects, 30+ tools.');
   d.panel({ fill: T.bg, decor: false });
   const map = mobile ? { w: 540, ox: -62, oy: 118, step: 7 } : { w: 880, ox: 0, oy: 66, step: 8 };
   const { dots, proj } = dottedMap(map);
@@ -266,7 +270,7 @@ export async function reach(mobile, save) {
   d.add(`<path d="${dots}" fill="none" stroke="${T.accent}" stroke-opacity=".46" stroke-width="${mobile ? 2.4 : 2.7}" stroke-linecap="round"/>`);
 
   heading(d, 'Remote, worldwide', { x: mobile ? 18 : 28, ghost: mobile ? undefined : 'WORLD' });
-  wrap('Agencies, startups and small businesses in the US, UK, AU, SG and DE.', 'b4', 15, W - (mobile ? 36 : 56)).forEach((l, i) => d.text(l, mobile ? 18 : 28, 76 + i * 20, { f: 'b4', size: 15, fill: T.muted }));
+  wrap('Agencies, startups and small businesses in the US, CA, UK, DE, RU, UAE, SG, AU and NZ.', 'b4', 15, W - (mobile ? 36 : 56)).forEach((l, i) => d.text(l, mobile ? 18 : 28, 76 + i * 20, { f: 'b4', size: 15, fill: T.muted }));
 
   d.once('zg-arc', '@keyframes zg-arc{from{stroke-dashoffset:112}to{stroke-dashoffset:0}}');
   const dur = 6;
@@ -277,7 +281,7 @@ export async function reach(mobile, save) {
     const ang = Math.atan2(y - py, x - px) - Math.PI / 2;
     const flip = Math.sin(ang) > 0 ? -1 : 1;
     const dp = `M${n(px)} ${n(py)}Q${n(mx + Math.cos(ang) * lift * flip)} ${n(my + Math.sin(ang) * lift * flip)} ${n(x)} ${n(y)}`;
-    const delay = n(i * 1.15);
+    const delay = n(i * dur / MARKETS.length);
     d.add(`<path d="${dp}" fill="none" stroke="${T.accent}" stroke-opacity=".32" stroke-width="1.2"/>`);
     d.add(`<path d="${dp}" pathLength="100" fill="none" stroke="${SUN.hi}" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="12 100" stroke-dashoffset="112" style="animation:zg-arc ${dur}s cubic-bezier(.5,0,.5,1) ${delay}s infinite"/>`);
     d.add(`<circle cx="${n(x)}" cy="${n(y)}" r="4" fill="${T.accent}"/>`);
@@ -289,7 +293,7 @@ export async function reach(mobile, save) {
   d.text('Philippines · GMT+8', px + 13, py + 4.5, { f: 'm5', size: 12.5, fill: T.text });
 
   // Headline figures.
-  const stats = [['5', 'client countries'], ['14', 'client projects'], ['30+', 'tools in the kit']];
+  const stats = [['9', 'client countries'], ['40+', 'client projects'], ['30+', 'tools in the kit']];
   const pad = mobile ? 18 : 28, gap = mobile ? 8 : 14, tw = (W - pad * 2 - gap * 2) / 3, th = mobile ? 92 : 88, ty = H - th - pad + 6;
   stats.forEach(([v, l], i) => {
     const x = pad + i * (tw + gap);
