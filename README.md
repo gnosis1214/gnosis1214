@@ -114,7 +114,7 @@
 <p align="center">
   <picture>
     <source media="(max-width: 560px), (min-width: 768px) and (max-width: 1000px)" srcset="./assets/zg-activity-mobile.svg">
-    <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 423 commits, 11 active days, longest streak 5 days. Busiest week: 394 contributions, week of Nov 1. A cyclist climbs an elevation profile charting contributions per week.">
+    <img src="./assets/zg-activity.svg" width="100%" alt="Activity: 425 commits, 11 active days, longest streak 5 days. Busiest week: 394 contributions, week of Nov 1. A cyclist climbs an elevation profile charting contributions per week.">
   </picture>
 </p>
 
@@ -126,7 +126,7 @@
 | Oct 4 | 1 |
 | Oct 25 | 2 |
 | Nov 1 | 394 |
-| Nov 8 | 30 |
+| Nov 8 | 32 |
 
 </details>
 <!-- zg-activity:end -->
